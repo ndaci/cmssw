@@ -7,7 +7,7 @@ MonojetPSet = cms.PSet(
         "HLT_PFJetCen80_PFMHTNoPuNoMu100_v",
         "HLT_MonoCentralPFJet80_PFMETnoMu105_NHEF0p95_v" # Run1
         ),
-    recJetLabel    = cms.InputTag("ak4PFJets"),
+    recPFJetLabel    = cms.InputTag("ak4PFJets"),
     recPFMETLabel  = cms.InputTag("pfMet"),
     # -- Analysis specific cuts
     minCandidates = cms.uint32(2),
