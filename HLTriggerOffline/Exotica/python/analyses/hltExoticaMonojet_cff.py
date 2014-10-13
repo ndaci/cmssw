@@ -2,10 +2,12 @@ import FWCore.ParameterSet.Config as cms
 
 MonojetPSet = cms.PSet(
     hltPathsToCheck = cms.vstring(
-        "HLT_PFJet260_v", # Run2
+        #"HLT_PFJet260_v", # Run2
+        "HLT_PFJetCen80_PFMETNoMu100_v",
+        "HLT_PFJetCen80_PFMHTNoPuNoMu100_v",
         "HLT_MonoCentralPFJet80_PFMETnoMu105_NHEF0p95_v" # Run1
         ),
-    recJetLabel    = cms.InputTag("ak5PFJetsCHS"),
+    recJetLabel    = cms.InputTag("ak4PFJets"),
     recPFMETLabel  = cms.InputTag("pfMet"),
     # -- Analysis specific cuts
     minCandidates = cms.uint32(2),
