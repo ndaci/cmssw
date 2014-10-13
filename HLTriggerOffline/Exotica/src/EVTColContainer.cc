@@ -19,6 +19,12 @@
 #include "DataFormats/EgammaCandidates/interface/PhotonFwd.h"
 #include "DataFormats/METReco/interface/PFMET.h"
 #include "DataFormats/METReco/interface/PFMETFwd.h"
+#include "DataFormats/METReco/interface/GenMET.h"
+#include "DataFormats/METReco/interface/GenMETFwd.h"
+#include "DataFormats/METReco/interface/CaloMET.h"
+#include "DataFormats/METReco/interface/CaloMETFwd.h"
+#include "DataFormats/L1Trigger/interface/L1EtMissParticle.h"
+#include "DataFormats/L1Trigger/interface/L1EtMissParticleFwd.h"
 #include "DataFormats/JetReco/interface/PFJet.h"
 #include "DataFormats/JetReco/interface/PFJetCollection.h"
 #include "DataFormats/JetReco/interface/CaloJet.h"
@@ -41,6 +47,9 @@ struct EVTColContainer {
         PFTAU = 15,
         PHOTON = 22,
         PFMET = 39,
+        GENMET = 390000, //RY
+        HLTMET = 390001, //RY
+        L1MET  = 390002, //RY
         PFJET = 211,
         CALOJET = 111, //ND
         _nMAX
@@ -54,6 +63,9 @@ struct EVTColContainer {
     const std::vector<reco::GsfElectron> * electrons;
     const std::vector<reco::Photon> * photons;
     const std::vector<reco::PFMET>  * pfMETs;
+    const std::vector<reco::GenMET> * genMETs;
+    const std::vector<reco::CaloMET> * hltMETs;
+    const std::vector<l1extra::L1EtMissParticle> * l1METs;
     const std::vector<reco::PFTau>  * pfTaus;
     const std::vector<reco::PFJet>  * pfJets;
     const std::vector<reco::CaloJet>* caloJets;
@@ -67,6 +79,9 @@ struct EVTColContainer {
         electrons(0),
         photons(0),
         pfMETs(0),
+        genMETs(0),
+        hltMETs(0),
+        l1METs(0),
         pfTaus(0),
         pfJets(0),
         caloJets(0),
@@ -94,6 +109,9 @@ struct EVTColContainer {
         electrons = 0;
         photons = 0;
         pfMETs = 0;
+        genMETs = 0;
+        hltMETs = 0;
+        l1METs = 0;
         pfTaus = 0;
         pfJets = 0;
         caloJets = 0;
@@ -126,6 +144,21 @@ struct EVTColContainer {
         pfMETs = v;
         ++nInitialized;
     }
+    void set(const reco::GenMETCollection * v)
+    {
+        genMETs = v;
+        ++nInitialized;
+    }
+    void set(const reco::CaloMETCollection * v)
+    {
+        hltMETs = v;
+        ++nInitialized;
+    }
+    void set(const l1extra::L1EtMissParticleCollection * v)
+    {
+        l1METs = v;
+        ++nInitialized;
+    }
     void set(const reco::PFTauCollection * v)
     {
         pfTaus = v;
@@ -156,6 +189,12 @@ struct EVTColContainer {
             size = photons->size();
         } else if (objtype == EVTColContainer::PFMET && pfMETs != 0) {
             size = pfMETs->size();
+        } else if (objtype == EVTColContainer::GENMET && genMETs != 0) {
+            size = genMETs->size();
+        } else if (objtype == EVTColContainer::HLTMET && hltMETs != 0) {
+            size = hltMETs->size();
+        } else if (objtype == EVTColContainer::L1MET && l1METs != 0) {
+            size = l1METs->size();
         } else if (objtype == EVTColContainer::PFTAU && pfTaus != 0) {
             size = pfTaus->size();
         } else if (objtype == EVTColContainer::PFJET && pfJets != 0) {
@@ -182,6 +221,12 @@ struct EVTColContainer {
             objTypestr = "Photon";
         } else if (objtype == EVTColContainer::PFMET) {
             objTypestr = "PFMET";
+        } else if (objtype == EVTColContainer::GENMET) {
+            objTypestr = "GenMET";
+        } else if (objtype == EVTColContainer::HLTMET) {
+            objTypestr = "hltMET";
+        } else if (objtype == EVTColContainer::L1MET) {
+            objTypestr = "l1MET";
         } else if (objtype == EVTColContainer::PFTAU) {
             objTypestr = "PFTau";
         } else if (objtype == EVTColContainer::PFJET) {

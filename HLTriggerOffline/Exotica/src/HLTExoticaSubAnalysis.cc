@@ -41,6 +41,9 @@ HLTExoticaSubAnalysis::HLTExoticaSubAnalysis(const edm::ParameterSet & pset,
     _recMuonTrkSelector(0),
     _recElecSelector(0),
     _recPFMETSelector(0),
+    _genMETSelector(0),
+    _hltMETSelector(0),
+    _l1METSelector(0),
     _recPFTauSelector(0),
     _recPhotonSelector(0),
     _recPFJetSelector(0),
@@ -130,6 +133,12 @@ HLTExoticaSubAnalysis::~HLTExoticaSubAnalysis()
     _recPhotonSelector = 0;
     delete _recPFMETSelector;
     _recPFMETSelector = 0;
+    delete _genMETSelector;
+    _genMETSelector = 0;
+    delete _hltMETSelector;
+    _hltMETSelector = 0;
+    delete _l1METSelector;
+    _l1METSelector = 0;
     delete _recPFTauSelector;
     _recPFTauSelector = 0;
     delete _recPFJetSelector;
@@ -423,14 +432,14 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 	// |  0   |  1  | --> 1 muon used
 	// |  1   |  2  | --> 2 electrons used  
 	// Initializing the count of the used objects.
-	std::map<unsigned int, int> countobjects;
+	std::map<unsigned int, int> * countobjects = new std::map<unsigned int, int>;
 	for (std::map<unsigned int, edm::InputTag>::iterator co = _recLabels.begin();
 	     co != _recLabels.end(); ++co) {
-	    countobjects.insert(std::pair<unsigned int, int>(co->first, 0));
+	    countobjects->insert(std::pair<unsigned int, int>(co->first, 0));
 	}
     
 	int counttotal = 0;
-	int totalobjectssize2 = 2 * countobjects.size();
+	int totalobjectssize2 = 2 * countobjects->size();
     
 	for (size_t j = 0; j != matchesGen.size(); ++j) {
 	    const unsigned int objType = matchesGen[j].pdgId();
@@ -439,7 +448,7 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 	
 	    float pt  = matchesGen[j].pt();
 
-	    if (countobjects[objType] == 0) {
+	    if ((*countobjects)[objType] == 0) {
 
                 // Cut for the pt-leading object 
                 StringCutObjectSelector<reco::LeafCandidate> select( _genCut_leading[objType] );
@@ -447,12 +456,12 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 
 		this->fillHist("gen", objTypeStr, "MaxPt1", pt);
 		// Filled the high pt ...
-		++countobjects[objType];
+		++((*countobjects)[objType]);
 		++counttotal;
-	    } else if (countobjects[objType] == 1) {
+	    } else if ((*countobjects)[objType] == 1) {
 		this->fillHist("gen", objTypeStr, "MaxPt2", pt);
 		// Filled the second high pt ...
-		++countobjects[objType];
+		++((*countobjects)[objType]);
 		++counttotal;
 	    } else {
 		// Already the minimum two objects has been filled, get out...
@@ -470,6 +479,9 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 	    this->fillHist("gen", objTypeStr, "SumEt", sumEt);
 
 	} // Closes loop in gen
+
+	LogDebug("ExoticaValidation") << "                        deleting countobjects";
+	//delete countobjects;
 
 	// Calling to the plotters analysis (where the evaluation of the different trigger paths are done)
 	//const std::string source = "gen";
@@ -499,14 +511,14 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 	// |  0   |  1  | --> 1 muon used
 	// |  1   |  2  | --> 2 electrons used  
 	// Initializing the count of the used objects.
-	std::map<unsigned int, int> countobjects;
+	std::map<unsigned int, int> * countobjects = new std::map<unsigned int, int>;
 	for (std::map<unsigned int, edm::InputTag>::iterator co = _recLabels.begin();
 	     co != _recLabels.end(); ++co) {
-	    countobjects.insert(std::pair<unsigned int, int>(co->first, 0));
+	    countobjects->insert(std::pair<unsigned int, int>(co->first, 0));
 	}
     
 	int counttotal = 0;
-	int totalobjectssize2 = 2 * countobjects.size();
+	int totalobjectssize2 = 2 * countobjects->size();
     
 	/// Debugging.
 	//std::cout << "Our RECO vector has matchesReco.size() = " << matchesReco.size() << std::endl;
@@ -518,7 +530,7 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 	    
 	    float pt  = matchesReco[j].pt();
 
-	    if (countobjects[objType] == 0) {
+	    if ((*countobjects)[objType] == 0) {
 
                 // Cut for the pt-leading object 
                 StringCutObjectSelector<reco::LeafCandidate> select( _recCut_leading[objType] );
@@ -526,12 +538,12 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 
 		this->fillHist("rec", objTypeStr, "MaxPt1", pt);
 		// Filled the high pt ...
-		++countobjects[objType];
+		++((*countobjects)[objType]);
 		++counttotal;
-	    } else if (countobjects[objType] == 1) {
+	    } else if ((*countobjects)[objType] == 1) {
 		this->fillHist("rec", objTypeStr, "MaxPt2", pt);
 		// Filled the second high pt ...
-		++countobjects[objType];
+		++((*countobjects)[objType]);
 		++counttotal;
 	    } else {
 		// Already the minimum two objects has been filled, get out...
@@ -549,6 +561,9 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 	    this->fillHist("rec", objTypeStr, "SumEt", sumEt);
 	} // Closes loop in reco
 
+	LogDebug("ExoticaValidation") << "                        deleting countobjects";
+	//delete countobjects;
+	
 	// Calling to the plotters analysis (where the evaluation of the different trigger paths are done)
 	//const std::string source = "reco";
 	for (std::vector<HLTExoticaPlotter>::iterator an = _plotters.begin(); an != _plotters.end(); ++an) {
@@ -568,13 +583,16 @@ const std::vector<unsigned int> HLTExoticaSubAnalysis::getObjectsType(const std:
 {
     LogDebug("ExoticaValidation") << "In HLTExoticaSubAnalysis::getObjectsType()";
 
-    static const unsigned int objSize = 7;
+    static const unsigned int objSize = 11;
     static const unsigned int objtriggernames[] = {
         EVTColContainer::MUON,
         EVTColContainer::MUONTRACK,
         EVTColContainer::ELEC,
         EVTColContainer::PHOTON,
         EVTColContainer::PFMET,
+        EVTColContainer::GENMET,
+        EVTColContainer::HLTMET,
+        EVTColContainer::L1MET,
         EVTColContainer::PFTAU,
         EVTColContainer::PFJET,
         EVTColContainer::CALOJET
@@ -620,6 +638,18 @@ void HLTExoticaSubAnalysis::getNamesOfObjects(const edm::ParameterSet & anpset)
     if (anpset.exists("recPFMETLabel")) {
         _recLabels[EVTColContainer::PFMET] = anpset.getParameter<edm::InputTag>("recPFMETLabel");
         _genSelectorMap[EVTColContainer::PFMET] = 0 ;
+    }
+    if (anpset.exists("genMETLabel")) {
+        _recLabels[EVTColContainer::GENMET] = anpset.getParameter<edm::InputTag>("genMETLabel");
+        _genSelectorMap[EVTColContainer::GENMET] = 0 ;
+    }
+    if (anpset.exists("hltMETLabel")) {
+        _recLabels[EVTColContainer::HLTMET] = anpset.getParameter<edm::InputTag>("hltMETLabel");
+        _genSelectorMap[EVTColContainer::HLTMET] = 0 ;
+    }
+    if (anpset.exists("l1METLabel")) {
+        _recLabels[EVTColContainer::L1MET] = anpset.getParameter<edm::InputTag>("l1METLabel");
+        _genSelectorMap[EVTColContainer::L1MET] = 0 ;
     }
     if (anpset.exists("recPFTauLabel")) {
         _recLabels[EVTColContainer::PFTAU] = anpset.getParameter<edm::InputTag>("recPFTauLabel");
@@ -680,6 +710,21 @@ void HLTExoticaSubAnalysis::registerConsumes(edm::ConsumesCollector & iC)
 	} 
 	else if (it->first == EVTColContainer::PFMET) {
             edm::EDGetTokenT<reco::PFMETCollection> particularToken = iC.consumes<reco::PFMETCollection>(it->second);
+	    edm::EDGetToken token(particularToken);
+	    _tokens[it->first] = token;
+	} 
+	else if (it->first == EVTColContainer::GENMET) {
+            edm::EDGetTokenT<reco::GenMETCollection> particularToken = iC.consumes<reco::GenMETCollection>(it->second);
+	    edm::EDGetToken token(particularToken);
+	    _tokens[it->first] = token;
+	} 
+	else if (it->first == EVTColContainer::HLTMET) {
+            edm::EDGetTokenT<reco::CaloMETCollection> particularToken = iC.consumes<reco::CaloMETCollection>(it->second);
+	    edm::EDGetToken token(particularToken);
+	    _tokens[it->first] = token;
+	} 
+	else if (it->first == EVTColContainer::L1MET) {
+            edm::EDGetTokenT<l1extra::L1EtMissParticleCollection> particularToken = iC.consumes<l1extra::L1EtMissParticleCollection>(it->second);
 	    edm::EDGetToken token(particularToken);
 	    _tokens[it->first] = token;
 	} 
@@ -755,6 +800,11 @@ void HLTExoticaSubAnalysis::getHandlesToObjects(const edm::Event & iEvent, EVTCo
         } 
 	else if (it->first == EVTColContainer::PFMET) {
             edm::Handle<reco::PFMETCollection> theHandle;
+            iEvent.getByToken(it->second, theHandle);
+            col->set(theHandle.product());
+        } 
+	else if (it->first == EVTColContainer::GENMET) {
+            edm::Handle<reco::GenMETCollection> theHandle;
             iEvent.getByToken(it->second, theHandle);
             col->set(theHandle.product());
         } 
@@ -861,6 +911,8 @@ void HLTExoticaSubAnalysis::initSelector(const unsigned int & objtype)
         _recPhotonSelector = new StringCutObjectSelector<reco::Photon>(_recCut[objtype]);
     } else if (objtype == EVTColContainer::PFMET && _recPFMETSelector == 0) {
         _recPFMETSelector = new StringCutObjectSelector<reco::PFMET>(_recCut[objtype]);
+    } else if (objtype == EVTColContainer::GENMET && _genMETSelector == 0) {
+        _genMETSelector = new StringCutObjectSelector<reco::GenMET>(_recCut[objtype]);
     } else if (objtype == EVTColContainer::PFTAU && _recPFTauSelector == 0) {
         _recPFTauSelector = new StringCutObjectSelector<reco::PFTau>(_recCut[objtype]);
     } else if (objtype == EVTColContainer::PFJET && _recPFJetSelector == 0) {
@@ -923,6 +975,14 @@ void HLTExoticaSubAnalysis::insertCandidates(const unsigned int & objType, const
 	    LogDebug("ExoticaValidation") << "Inserting PFMET " << i ;
 	    if (_recPFMETSelector->operator()(cols->pfMETs->at(i))) {
 		reco::LeafCandidate m(0, cols->pfMETs->at(i).p4(), cols->pfMETs->at(i).vertex(), objType, 0, true);
+		matches->push_back(m);
+	    }
+        }
+    } else if (objType == EVTColContainer::GENMET) {
+        for (size_t i = 0; i < cols->genMETs->size(); i++) {
+	    LogDebug("ExoticaValidation") << "Inserting PFMET " << i ;
+	    if (_genMETSelector->operator()(cols->genMETs->at(i))) {
+		reco::LeafCandidate m(0, cols->genMETs->at(i).p4(), cols->genMETs->at(i).vertex(), objType, 0, true);
 		matches->push_back(m);
 	    }
         }

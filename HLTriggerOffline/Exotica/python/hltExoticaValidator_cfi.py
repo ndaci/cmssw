@@ -29,6 +29,7 @@ from HLTriggerOffline.Exotica.analyses.hltExoticaDisplacedEleMu_cff    import Di
 from HLTriggerOffline.Exotica.analyses.hltExoticaDisplacedDimuon_cff   import DisplacedDimuonPSet
 from HLTriggerOffline.Exotica.analyses.hltExoticaDisplacedL2Dimuon_cff import DisplacedL2DimuonPSet
 from HLTriggerOffline.Exotica.analyses.hltExoticaPureMET_cff           import PureMETPSet
+from HLTriggerOffline.Exotica.analyses.hltExoticaMETplusTrack_cff      import METplusTrackPSet
 from HLTriggerOffline.Exotica.analyses.hltExoticaMonojet_cff           import MonojetPSet
 
 hltExoticaValidator = cms.EDAnalyzer(
@@ -55,6 +56,7 @@ hltExoticaValidator = cms.EDAnalyzer(
                                  "DisplacedDimuon",
                                  "DisplacedL2Dimuon",
                                  "PureMET",
+                                 "METplusTrack",
                                  "Monojet"
                                  ),
     
@@ -129,6 +131,15 @@ hltExoticaValidator = cms.EDAnalyzer(
     PFMET_genCut      = cms.string("pt > 75"),
     PFMET_recCut      = cms.string("pt > 75"),  
    
+    GenMET_genCut      = cms.string("pt > 75"),
+    GenMET_recCut      = cms.string("pt > 75"),  
+   
+    hltMET_genCut      = cms.string("pt > 75"),
+    hltMET_recCut      = cms.string("pt > 75"),  
+   
+    l1MET_genCut      = cms.string("pt > 75"),
+    l1MET_recCut      = cms.string("pt > 75"),  
+   
     # The specific parameters per analysis: the name of the parameter set has to be 
     # the same as the defined ones in the 'analysis' datamember. Each analysis is a PSet
     # with the mandatory attributes:
@@ -158,6 +169,7 @@ hltExoticaValidator = cms.EDAnalyzer(
     DisplacedDimuon  = DisplacedDimuonPSet,
     DisplacedL2Dimuon = DisplacedL2DimuonPSet,
     PureMET          = PureMETPSet,                                 
+    METplusTrack     = METplusTrackPSet,                                 
     Monojet          = MonojetPSet,
     HT               = HTPSet
 )
