@@ -156,7 +156,9 @@ private:
     std::map<unsigned int, StringCutObjectSelector<reco::GenParticle> *> _genSelectorMap;
     StringCutObjectSelector<reco::Muon>        * _recMuonSelector;
     StringCutObjectSelector<reco::Track>       * _recMuonTrkSelector;
+    StringCutObjectSelector<reco::Track>       * _recTrackSelector;
     StringCutObjectSelector<reco::GsfElectron> * _recElecSelector;
+    StringCutObjectSelector<reco::MET>         * _recMETSelector;
     StringCutObjectSelector<reco::PFMET>       * _recPFMETSelector;
     StringCutObjectSelector<reco::GenMET>      * _genMETSelector;
     StringCutObjectSelector<reco::CaloMET>     * _hltMETSelector;

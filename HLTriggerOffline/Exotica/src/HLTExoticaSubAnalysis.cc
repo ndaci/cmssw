@@ -39,7 +39,9 @@ HLTExoticaSubAnalysis::HLTExoticaSubAnalysis(const edm::ParameterSet & pset,
     _parametersTurnOn(pset.getParameter<std::vector<double> >("parametersTurnOn")),
     _recMuonSelector(0),
     _recMuonTrkSelector(0),
+    _recTrackSelector(0),
     _recElecSelector(0),
+    _recMETSelector(0),
     _recPFMETSelector(0),
     _genMETSelector(0),
     _hltMETSelector(0),
@@ -127,10 +129,14 @@ HLTExoticaSubAnalysis::~HLTExoticaSubAnalysis()
     _recMuonSelector = 0;
     delete _recMuonTrkSelector;
     _recMuonTrkSelector = 0;
+    delete _recTrackSelector;
+    _recTrackSelector = 0;
     delete _recElecSelector;
     _recElecSelector = 0;
     delete _recPhotonSelector;
     _recPhotonSelector = 0;
+    delete _recMETSelector;
+    _recMETSelector = 0;
     delete _recPFMETSelector;
     _recPFMETSelector = 0;
     delete _genMETSelector;
@@ -586,9 +592,11 @@ const std::vector<unsigned int> HLTExoticaSubAnalysis::getObjectsType(const std:
     static const unsigned int objSize = 11;
     static const unsigned int objtriggernames[] = {
         EVTColContainer::MUON,
-        EVTColContainer::MUONTRACK,
+        EVTColContainer::MUTRK,
+        EVTColContainer::TRACK,
         EVTColContainer::ELEC,
         EVTColContainer::PHOTON,
+        EVTColContainer::MET,
         EVTColContainer::PFMET,
         EVTColContainer::GENMET,
         EVTColContainer::HLTMET,
@@ -624,8 +632,12 @@ void HLTExoticaSubAnalysis::getNamesOfObjects(const edm::ParameterSet & anpset)
         _genSelectorMap[EVTColContainer::MUON] = 0 ;
     }
     if (anpset.exists("recMuonTrkLabel")) {
-        _recLabels[EVTColContainer::MUONTRACK] = anpset.getParameter<edm::InputTag>("recMuonTrkLabel");
-        _genSelectorMap[EVTColContainer::MUONTRACK] = 0 ;
+        _recLabels[EVTColContainer::MUTRK] = anpset.getParameter<edm::InputTag>("recMuonTrkLabel");
+        _genSelectorMap[EVTColContainer::MUTRK] = 0 ;
+    }
+    if (anpset.exists("recTrackkLabel")) {
+        _recLabels[EVTColContainer::TRACK] = anpset.getParameter<edm::InputTag>("recTrackLabel");
+        _genSelectorMap[EVTColContainer::TRACK] = 0 ;
     }
     if (anpset.exists("recElecLabel")) {
         _recLabels[EVTColContainer::ELEC] = anpset.getParameter<edm::InputTag>("recElecLabel");
@@ -634,6 +646,10 @@ void HLTExoticaSubAnalysis::getNamesOfObjects(const edm::ParameterSet & anpset)
     if (anpset.exists("recPhotonLabel")) {
         _recLabels[EVTColContainer::PHOTON] = anpset.getParameter<edm::InputTag>("recPhotonLabel");
         _genSelectorMap[EVTColContainer::PHOTON] = 0 ;
+    }
+    if (anpset.exists("recMETLabel")) {
+        _recLabels[EVTColContainer::MET] = anpset.getParameter<edm::InputTag>("recMETLabel");
+        _genSelectorMap[EVTColContainer::MET] = 0 ;
     }
     if (anpset.exists("recPFMETLabel")) {
         _recLabels[EVTColContainer::PFMET] = anpset.getParameter<edm::InputTag>("recPFMETLabel");
@@ -693,7 +709,12 @@ void HLTExoticaSubAnalysis::registerConsumes(edm::ConsumesCollector & iC)
 	    edm::EDGetToken token(particularToken);
 	    _tokens[it->first] = token;
 	} 
-	else if (it->first == EVTColContainer::MUONTRACK) {
+	else if (it->first == EVTColContainer::MUTRK) {
+	    edm::EDGetTokenT<reco::TrackCollection> particularToken = iC.consumes<reco::TrackCollection>(it->second);
+	    edm::EDGetToken token(particularToken);
+	    _tokens[it->first] = token;
+        }
+	else if (it->first == EVTColContainer::TRACK) {
 	    edm::EDGetTokenT<reco::TrackCollection> particularToken = iC.consumes<reco::TrackCollection>(it->second);
 	    edm::EDGetToken token(particularToken);
 	    _tokens[it->first] = token;
@@ -705,6 +726,11 @@ void HLTExoticaSubAnalysis::registerConsumes(edm::ConsumesCollector & iC)
 	} 
 	else if (it->first == EVTColContainer::PHOTON) {
             edm::EDGetTokenT<reco::PhotonCollection> particularToken = iC.consumes<reco::PhotonCollection>(it->second);
+	    edm::EDGetToken token(particularToken);
+	    _tokens[it->first] = token;
+	} 
+	else if (it->first == EVTColContainer::MET) {
+            edm::EDGetTokenT<reco::METCollection> particularToken = iC.consumes<reco::METCollection>(it->second);
 	    edm::EDGetToken token(particularToken);
 	    _tokens[it->first] = token;
 	} 
@@ -783,7 +809,12 @@ void HLTExoticaSubAnalysis::getHandlesToObjects(const edm::Event & iEvent, EVTCo
             iEvent.getByToken(it->second, theHandle);
             col->set(theHandle.product());
         } 
-	else if (it->first == EVTColContainer::MUONTRACK) {
+	else if (it->first == EVTColContainer::MUTRK) {
+            edm::Handle<reco::TrackCollection> theHandle;
+            iEvent.getByToken(it->second, theHandle);
+            col->set(theHandle.product());
+        }
+	else if (it->first == EVTColContainer::TRACK) {
             edm::Handle<reco::TrackCollection> theHandle;
             iEvent.getByToken(it->second, theHandle);
             col->set(theHandle.product());
@@ -798,6 +829,11 @@ void HLTExoticaSubAnalysis::getHandlesToObjects(const edm::Event & iEvent, EVTCo
             iEvent.getByToken(it->second, theHandle);
             col->set(theHandle.product());
         } 
+	else if (it->first == EVTColContainer::MET) {
+            edm::Handle<reco::METCollection> theHandle;
+            iEvent.getByToken(it->second, theHandle);
+            col->set(theHandle.product());
+        } 
 	else if (it->first == EVTColContainer::PFMET) {
             edm::Handle<reco::PFMETCollection> theHandle;
             iEvent.getByToken(it->second, theHandle);
@@ -808,6 +844,16 @@ void HLTExoticaSubAnalysis::getHandlesToObjects(const edm::Event & iEvent, EVTCo
             iEvent.getByToken(it->second, theHandle);
             col->set(theHandle.product());
         } 
+        else if (it->first == EVTColContainer::HLTMET) {
+            edm::Handle<reco::CaloMETCollection> theHandle;
+            iEvent.getByToken(it->second, theHandle);
+            col->set(theHandle.product());
+        }
+        else if (it->first == EVTColContainer::L1MET) {
+            edm::Handle<l1extra::L1EtMissParticleCollection> theHandle;
+            iEvent.getByToken(it->second, theHandle);
+            col->set(theHandle.product());
+        }
 	else if (it->first == EVTColContainer::PFTAU) {
             edm::Handle<reco::PFTauCollection> theHandle;
             iEvent.getByToken(it->second, theHandle);
@@ -903,16 +949,24 @@ void HLTExoticaSubAnalysis::initSelector(const unsigned int & objtype)
 
     if (objtype == EVTColContainer::MUON && _recMuonSelector == 0) {
         _recMuonSelector = new StringCutObjectSelector<reco::Muon>(_recCut[objtype]);
-    } else if (objtype == EVTColContainer::MUONTRACK && _recMuonTrkSelector == 0) {
+    } else if (objtype == EVTColContainer::MUTRK && _recMuonTrkSelector == 0) {
         _recMuonTrkSelector = new StringCutObjectSelector<reco::Track>(_recCut[objtype]);
+    } else if (objtype == EVTColContainer::TRACK && _recTrackSelector == 0) {
+        _recTrackSelector = new StringCutObjectSelector<reco::Track>(_recCut[objtype]);
     } else if (objtype == EVTColContainer::ELEC && _recElecSelector == 0) {
         _recElecSelector = new StringCutObjectSelector<reco::GsfElectron>(_recCut[objtype]);
     } else if (objtype == EVTColContainer::PHOTON && _recPhotonSelector == 0) {
         _recPhotonSelector = new StringCutObjectSelector<reco::Photon>(_recCut[objtype]);
+    } else if (objtype == EVTColContainer::MET && _recMETSelector == 0) {
+        _recMETSelector = new StringCutObjectSelector<reco::MET>(_recCut[objtype]);
     } else if (objtype == EVTColContainer::PFMET && _recPFMETSelector == 0) {
         _recPFMETSelector = new StringCutObjectSelector<reco::PFMET>(_recCut[objtype]);
     } else if (objtype == EVTColContainer::GENMET && _genMETSelector == 0) {
         _genMETSelector = new StringCutObjectSelector<reco::GenMET>(_recCut[objtype]);
+    } else if (objtype == EVTColContainer::HLTMET && _hltMETSelector == 0) {
+        _hltMETSelector = new StringCutObjectSelector<reco::CaloMET>(_recCut[objtype]);
+    } else if (objtype == EVTColContainer::L1MET && _l1METSelector == 0) {
+        _l1METSelector = new StringCutObjectSelector<l1extra::L1EtMissParticle>(_recCut[objtype]);
     } else if (objtype == EVTColContainer::PFTAU && _recPFTauSelector == 0) {
         _recPFTauSelector = new StringCutObjectSelector<reco::PFTau>(_recCut[objtype]);
     } else if (objtype == EVTColContainer::PFJET && _recPFJetSelector == 0) {
@@ -940,15 +994,26 @@ void HLTExoticaSubAnalysis::insertCandidates(const unsigned int & objType, const
 		matches->push_back(m);
 	    }
         }
-    } else if (objType == EVTColContainer::MUONTRACK) {
-        for (size_t i = 0; i < cols->muonTracks->size(); i++) {
+    } else if (objType == EVTColContainer::MUTRK) {
+        for (size_t i = 0; i < cols->tracks->size(); i++) {
 	    LogDebug("ExoticaValidation") << "Inserting muonTrack " << i ;
-	    if (_recMuonTrkSelector->operator()(cols->muonTracks->at(i))) {
+	    if (_recMuonTrkSelector->operator()(cols->tracks->at(i))) {
 		ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>> mom4;
-                ROOT::Math::XYZVector mom3 = cols->muonTracks->at(i).innerMomentum();
+                ROOT::Math::XYZVector mom3 = cols->tracks->at(i).innerMomentum();
                 mom4.SetXYZT(mom3.x(),mom3.y(),mom3.z(),mom3.r());
-		reco::LeafCandidate m(0, mom4, cols->muonTracks->at(i).vertex(), objType, 0, true);
+		reco::LeafCandidate m(0, mom4, cols->tracks->at(i).vertex(), objType, 0, true);
 		matches->push_back(m);
+            }
+        }
+    } else if (objType == EVTColContainer::TRACK) {
+        for (size_t i = 0; i < cols->tracks->size(); i++) {
+            LogDebug("ExoticaValidation") << "Inserting Track " << i ;
+            if (_recTrackSelector->operator()(cols->tracks->at(i))) {
+                ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>> mom4;
+                ROOT::Math::XYZVector mom3 = cols->tracks->at(i).momentum();
+                mom4.SetXYZT(mom3.x(),mom3.y(),mom3.z(),mom3.r());
+                reco::LeafCandidate m(0, mom4, cols->tracks->at(i).vertex(), objType, 0, true);
+                matches->push_back(m);
             }
         }
     } else if (objType == EVTColContainer::ELEC) {
@@ -985,6 +1050,22 @@ void HLTExoticaSubAnalysis::insertCandidates(const unsigned int & objType, const
 		reco::LeafCandidate m(0, cols->genMETs->at(i).p4(), cols->genMETs->at(i).vertex(), objType, 0, true);
 		matches->push_back(m);
 	    }
+        }
+    } else if (objType == EVTColContainer::HLTMET) {
+        for (size_t i = 0; i < cols->hltMETs->size(); i++) {
+            LogDebug("ExoticaValidation") << "Inserting HLTMET " << i ;
+            if (_hltMETSelector->operator()(cols->hltMETs->at(i))) {
+                reco::LeafCandidate m(0, cols->hltMETs->at(i).p4(), cols->hltMETs->at(i).vertex(), objType, 0, true);
+                matches->push_back(m);
+            }
+        }
+    } else if (objType == EVTColContainer::L1MET) {
+        for (size_t i = 0; i < cols->l1METs->size(); i++) {
+            LogDebug("ExoticaValidation") << "Inserting L1MET " << i ;
+            if (_l1METSelector->operator()(cols->l1METs->at(i))) {
+                reco::LeafCandidate m(0, cols->l1METs->at(i).p4(), cols->l1METs->at(i).vertex(), objType, 0, true);
+                matches->push_back(m);
+            }
         }
     } else if (objType == EVTColContainer::PFTAU) {
         for (size_t i = 0; i < cols->pfTaus->size(); i++) {

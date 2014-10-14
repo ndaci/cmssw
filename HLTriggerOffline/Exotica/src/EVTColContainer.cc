@@ -17,6 +17,8 @@
 #include "DataFormats/EgammaCandidates/interface/GsfElectronFwd.h"
 #include "DataFormats/EgammaCandidates/interface/Photon.h"
 #include "DataFormats/EgammaCandidates/interface/PhotonFwd.h"
+#include "DataFormats/METReco/interface/MET.h"
+#include "DataFormats/METReco/interface/METFwd.h"
 #include "DataFormats/METReco/interface/PFMET.h"
 #include "DataFormats/METReco/interface/PFMETFwd.h"
 #include "DataFormats/METReco/interface/GenMET.h"
@@ -41,43 +43,47 @@
 /// the pdgIds of the particles involved.
 struct EVTColContainer {
     enum {
-        ELEC = 11,
-        MUON = 13,
-        MUONTRACK = 130000, //RY
-        PFTAU = 15,
-        PHOTON = 22,
-        PFMET = 39,
-        GENMET = 390000, //RY
-        HLTMET = 390001, //RY
-        L1MET  = 390002, //RY
-        PFJET = 211,
+        ELEC    = 11,
+        MUON    = 13,
+        MUTRK   = 130000, //RY
+        TRACK   = 0,      //RY
+        PFTAU   = 15,
+        PHOTON  = 22,
+        PFMET   = 39,
+        MET     = 390000, //RY
+        GENMET  = 390001, //RY
+        HLTMET  = 390002, //RY
+        L1MET   = 390003, //RY
+        PFJET   = 211,
         CALOJET = 111, //ND
         _nMAX
     };
 
     int nOfCollections;
     int nInitialized;
-    const reco::GenParticleCollection * genParticles;
-    const std::vector<reco::Muon> * muons;
-    const std::vector<reco::Track> * muonTracks;
-    const std::vector<reco::GsfElectron> * electrons;
-    const std::vector<reco::Photon> * photons;
-    const std::vector<reco::PFMET>  * pfMETs;
-    const std::vector<reco::GenMET> * genMETs;
-    const std::vector<reco::CaloMET> * hltMETs;
+    const reco::GenParticleCollection            * genParticles;
+    const std::vector<reco::Muon>                * muons;
+    const std::vector<reco::Track>               * tracks;
+    const std::vector<reco::GsfElectron>         * electrons;
+    const std::vector<reco::Photon>              * photons;
+    const std::vector<reco::MET>                 * METs;
+    const std::vector<reco::PFMET>               * pfMETs;
+    const std::vector<reco::GenMET>              * genMETs;
+    const std::vector<reco::CaloMET>             * hltMETs;
     const std::vector<l1extra::L1EtMissParticle> * l1METs;
-    const std::vector<reco::PFTau>  * pfTaus;
-    const std::vector<reco::PFJet>  * pfJets;
-    const std::vector<reco::CaloJet>* caloJets;
-    const edm::TriggerResults   * triggerResults ;
+    const std::vector<reco::PFTau>               * pfTaus;
+    const std::vector<reco::PFJet>               * pfJets;
+    const std::vector<reco::CaloJet>             * caloJets;
+    const edm::TriggerResults                    * triggerResults ;
     EVTColContainer():
         nOfCollections(6),
         nInitialized(0),
         genParticles(0),
         muons(0),
-        muonTracks(0),
+        tracks(0),
         electrons(0),
         photons(0),
+        METs(0),
         pfMETs(0),
         genMETs(0),
         hltMETs(0),
@@ -105,9 +111,10 @@ struct EVTColContainer {
         nInitialized = 0;
         genParticles = 0;
         muons = 0;
-        muonTracks = 0;
+        tracks = 0;
         electrons = 0;
         photons = 0;
+        METs = 0;
         pfMETs = 0;
         genMETs = 0;
         hltMETs = 0;
@@ -126,7 +133,7 @@ struct EVTColContainer {
     }
     void set(const reco::TrackCollection * v)
     {
-	muonTracks = v;
+	tracks = v;
         ++nInitialized;
     }
     void set(const reco::GsfElectronCollection * v)
@@ -137,6 +144,11 @@ struct EVTColContainer {
     void set(const reco::PhotonCollection * v)
     {
         photons = v;
+        ++nInitialized;
+    }
+    void set(const reco::METCollection * v)
+    {
+        METs = v;
         ++nInitialized;
     }
     void set(const reco::PFMETCollection * v)
@@ -181,12 +193,16 @@ struct EVTColContainer {
         unsigned int size = 0;
         if (objtype == EVTColContainer::MUON && muons != 0) {
             size = muons->size();
-        } else if (objtype == EVTColContainer::MUONTRACK && muonTracks != 0) {
-            size = muonTracks->size();
+        } else if (objtype == EVTColContainer::MUTRK && tracks != 0) {
+            size = tracks->size();
+        } else if (objtype == EVTColContainer::TRACK && tracks != 0) {
+            size = tracks->size();
         } else if (objtype == EVTColContainer::ELEC && electrons != 0) {
             size = electrons->size();
         } else if (objtype == EVTColContainer::PHOTON && photons != 0) {
             size = photons->size();
+        } else if (objtype == EVTColContainer::MET && METs != 0) {
+            size = METs->size();
         } else if (objtype == EVTColContainer::PFMET && pfMETs != 0) {
             size = pfMETs->size();
         } else if (objtype == EVTColContainer::GENMET && genMETs != 0) {
@@ -213,12 +229,16 @@ struct EVTColContainer {
 
         if (objtype == EVTColContainer::MUON) {
             objTypestr = "Mu";
-        } else if (objtype == EVTColContainer::MUONTRACK) {
+        } else if (objtype == EVTColContainer::MUTRK) {
             objTypestr = "refittedStandAloneMuons";
+        } else if (objtype == EVTColContainer::TRACK) {
+            objTypestr = "Track";
         } else if (objtype == EVTColContainer::ELEC) {
             objTypestr = "Ele";
         } else if (objtype == EVTColContainer::PHOTON) {
             objTypestr = "Photon";
+        } else if (objtype == EVTColContainer::MET) {
+            objTypestr = "MET";
         } else if (objtype == EVTColContainer::PFMET) {
             objTypestr = "PFMET";
         } else if (objtype == EVTColContainer::GENMET) {
