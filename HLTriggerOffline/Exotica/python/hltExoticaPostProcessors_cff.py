@@ -134,9 +134,9 @@ hltExoticaPostMuonNoBptx = hltExoticaPostProcessor.clone()
 hltExoticaPostMuonNoBptx.subDirs = ['HLT/Exotica/MuonNoBptx']
 hltExoticaPostMuonNoBptx.efficiencyProfile = efficiency_strings
 
-hltExoticaPostDisplacedEleMu = hltExoticaPostProcessor.clone()
-hltExoticaPostDisplacedEleMu.subDirs = ['HLT/Exotica/DisplacedEleMu']
-hltExoticaPostDisplacedEleMu.efficiencyProfile = efficiency_strings
+hltExoticaPostDisplacedMuEG = hltExoticaPostProcessor.clone()
+hltExoticaPostDisplacedMuEG.subDirs = ['HLT/Exotica/DisplacedMuEG']
+hltExoticaPostDisplacedMuEG.efficiencyProfile = efficiency_strings
 
 hltExoticaPostDisplacedDimuon = hltExoticaPostProcessor.clone()
 hltExoticaPostDisplacedDimuon.subDirs = ['HLT/Exotica/DisplacedDimuon']
@@ -177,7 +177,7 @@ hltExoticaPostProcessors = cms.Sequence(
     hltExoticaPostJetNoBptx +
     hltExoticaPostMuonNoBptx +
     # Displaced paths
-    hltExoticaPostDisplacedEleMu +
+    hltExoticaPostDisplacedMuEG +
     hltExoticaPostDisplacedDimuon +
     hltExoticaPostDisplacedL2Dimuon +
     # Others (to be properly integrated)

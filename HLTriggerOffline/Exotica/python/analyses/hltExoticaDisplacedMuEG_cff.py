@@ -1,9 +1,11 @@
 import FWCore.ParameterSet.Config as cms
 
-DisplacedEleMuPSet = cms.PSet(
+DisplacedMuEGPSet = cms.PSet(
     hltPathsToCheck = cms.vstring(
         "HLT_Mu38NoFiltersNoVtx_Photon38_CaloIdL_v", # Run2 Displaced muons
         "HLT_Mu42NoFiltersNoVtx_Photon42_CaloIdL_v", # Run2 Displaced muons
+        "HLT_Mu33NoFilters_NoVtx_2Cha_Photon33_CaloIdL_R9Id65_HE10_v", # Run2 
+        "HLT_Mu33NoFiltersNoVtx_Photon33_CaloIdL_R9Id65_HE10_v", # Run2 
         "HLT_Mu17_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v", # Run1
         "HLT_Mu8_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v"  # Run1
         ),
