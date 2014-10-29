@@ -63,7 +63,7 @@ plot_types = ["TurnOn1", "TurnOn2", "TurnOn3", "EffEta", "EffPhi"]
 #--- IMPORTANT: Update this collection whenever you introduce a new object
 #               in the code (from EVTColContainer::getTypeString)
 obj_types  = ["Mu","refittedStandAloneMuons","Track","Ele","Photon","PFTau","PFJet","MET","PFMET","GenMET","CaloJet"
-             ]# ,"hltMET","l1MET"] # Work in progress
+             ,"CaloMET"]#,"l1MET"] # Work in progress
 #--- IMPORTANT: Trigger are extracted from the hltExoticaValidator_cfi.py module
 triggers = [ ] 
 efficiency_strings = []
