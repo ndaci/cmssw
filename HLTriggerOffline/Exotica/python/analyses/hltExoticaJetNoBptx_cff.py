@@ -3,9 +3,9 @@ import FWCore.ParameterSet.Config as cms
 JetNoBptxPSet = cms.PSet(
     hltPathsToCheck = cms.vstring(
         "HLT_JetE50_NoBPTX3BX_NoHalo_v", # Run2 proposal AND Run1 (frozenHLT)
-        "HLT_JetE30_NoBPTX_v1",
-        "HLT_JetE30_NoBPTX3BX_NoHalo_v1",
-        "HLT_JetE70_NoBPTX3BX_NoHalo_v1",
+        "HLT_JetE30_NoBPTX_v",
+        "HLT_JetE30_NoBPTX3BX_NoHalo_v",
+        "HLT_JetE70_NoBPTX3BX_NoHalo_v",
         ),
     recCaloJetLabel    = cms.InputTag("ak4CaloJets"),
 
