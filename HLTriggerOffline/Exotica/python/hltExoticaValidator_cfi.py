@@ -145,6 +145,9 @@ hltExoticaValidator = cms.EDAnalyzer(
    
     Track_genCut      = cms.string("pt > 50"),
     Track_recCut      = cms.string("pt > 50"),
+    
+    CaloMET_genCut  = cms.string("pt > 75"),
+    CaloMET_recCut  = cms.string("pt > 75"),
 
     hltMET_genCut   = cms.string("pt > 75"),
     hltMET_recCut   = cms.string("pt > 75"),  
@@ -183,5 +186,8 @@ hltExoticaValidator = cms.EDAnalyzer(
     PureMET          = PureMETPSet,                                 
     METplusTrack     = METplusTrackPSet,                                 
     Monojet          = MonojetPSet,
-    HT               = HTPSet
+    HT               = HTPSet,
+    DisplacedDimuonDijet = DisplacedDimuonDijetPSet,
+    EleMu            = EleMuPSet,
+    HTDisplacedJets  = HTDisplacedJetsPSet 
 )
