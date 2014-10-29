@@ -159,6 +159,18 @@ hltExoticaPostMETplusTrack = hltExoticaPostProcessor.clone()
 hltExoticaPostMETplusTrack.subDirs = ['HLT/Exotica/METplusTrack']
 hltExoticaPostMETplusTrack.efficiencyProfile = efficiency_strings
 
+hltExoticaDisplacedDimuonDijet = hltExoticaPostProcessor.clone()
+hltExoticaDisplacedDimuonDijet.subDirs = ['HLT/Exotica/DisplacedDimuonDijet']
+hltExoticaDisplacedDimuonDijet.efficiencyProfile = efficiency_strings
+
+hltExoticaEleMu = hltExoticaPostProcessor.clone()
+hltExoticaEleMu.subDirs = ['HLT/Exotica/EleMu']
+hltExoticaEleMu.efficiencyProfile = efficiency_strings
+
+hltExoticaHTDisplacedJets = hltExoticaPostProcessor.clone()
+hltExoticaHTDisplacedJets.subDirs = ['HLT/Exotica/HTDisplacedJets']
+hltExoticaHTDisplacedJets.efficiencyProfile = efficiency_strings
+
 hltExoticaPostProcessors = cms.Sequence(
     # Di-lepton paths
     hltExoticaPostHighPtDimuon +
@@ -183,5 +195,8 @@ hltExoticaPostProcessors = cms.Sequence(
     # Others (to be properly integrated)
     hltExoticaPostMonojet +
     hltExoticaPostPureMET +
-    hltExoticaPostMETplusTrack
+    hltExoticaPostMETplusTrack +
+    hltExoticaDisplacedDimuonDijet +
+    hltExoticaEleMu +
+    hltExoticaHTDisplacedJets
     )
