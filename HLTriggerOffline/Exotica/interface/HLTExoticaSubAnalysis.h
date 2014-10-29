@@ -161,7 +161,7 @@ private:
     StringCutObjectSelector<reco::MET>         * _recMETSelector;
     StringCutObjectSelector<reco::PFMET>       * _recPFMETSelector;
     StringCutObjectSelector<reco::GenMET>      * _genMETSelector;
-    StringCutObjectSelector<reco::CaloMET>     * _hltMETSelector;
+    StringCutObjectSelector<reco::CaloMET>     * _recCaloMETSelector;
     StringCutObjectSelector<l1extra::L1EtMissParticle> * _l1METSelector;
     StringCutObjectSelector<reco::PFTau>       * _recPFTauSelector;
     StringCutObjectSelector<reco::Photon>      * _recPhotonSelector;

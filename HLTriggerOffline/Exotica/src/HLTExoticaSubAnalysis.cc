@@ -44,7 +44,7 @@ HLTExoticaSubAnalysis::HLTExoticaSubAnalysis(const edm::ParameterSet & pset,
     _recMETSelector(0),
     _recPFMETSelector(0),
     _genMETSelector(0),
-    _hltMETSelector(0),
+    _recCaloMETSelector(0),
     _l1METSelector(0),
     _recPFTauSelector(0),
     _recPhotonSelector(0),
@@ -141,8 +141,8 @@ HLTExoticaSubAnalysis::~HLTExoticaSubAnalysis()
     _recPFMETSelector = 0;
     delete _genMETSelector;
     _genMETSelector = 0;
-    delete _hltMETSelector;
-    _hltMETSelector = 0;
+    delete _recCaloMETSelector;
+    _recCaloMETSelector = 0;
     delete _l1METSelector;
     _l1METSelector = 0;
     delete _recPFTauSelector;
@@ -451,6 +451,7 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 	    const unsigned int objType = matchesGen[j].pdgId();
 	    //std::cout << "(4) Gonna call with " << objType << std::endl;
 	    const std::string objTypeStr = EVTColContainer::getTypeString(objType);
+//std::cerr << "### " << objTypeStr << std::endl;
 	
 	    float pt  = matchesGen[j].pt();
 
@@ -479,6 +480,7 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 	    float eta = matchesGen[j].eta();
 	    float phi = matchesGen[j].phi();
 	    float sumEt = 0;//matchesGen[j].sumEt;
+//std::cerr << "### matchesGen[j].Et=" << matchesGen[j].et() << std::endl;
 	
 	    this->fillHist("gen", objTypeStr, "Eta", eta);
 	    this->fillHist("gen", objTypeStr, "Phi", phi);
@@ -589,7 +591,7 @@ const std::vector<unsigned int> HLTExoticaSubAnalysis::getObjectsType(const std:
 {
     LogDebug("ExoticaValidation") << "In HLTExoticaSubAnalysis::getObjectsType()";
 
-    static const unsigned int objSize = 11;
+    static const unsigned int objSize = 13;
     static const unsigned int objtriggernames[] = {
         EVTColContainer::MUON,
         EVTColContainer::MUTRK,
@@ -599,7 +601,7 @@ const std::vector<unsigned int> HLTExoticaSubAnalysis::getObjectsType(const std:
         EVTColContainer::MET,
         EVTColContainer::PFMET,
         EVTColContainer::GENMET,
-        EVTColContainer::HLTMET,
+        EVTColContainer::CALOMET,
         EVTColContainer::L1MET,
         EVTColContainer::PFTAU,
         EVTColContainer::PFJET,
@@ -659,9 +661,13 @@ void HLTExoticaSubAnalysis::getNamesOfObjects(const edm::ParameterSet & anpset)
         _recLabels[EVTColContainer::GENMET] = anpset.getParameter<edm::InputTag>("genMETLabel");
         _genSelectorMap[EVTColContainer::GENMET] = 0 ;
     }
+    if (anpset.exists("recCaloMETLabel")) {
+        _recLabels[EVTColContainer::CALOMET] = anpset.getParameter<edm::InputTag>("recCaloMETLabel");
+        _genSelectorMap[EVTColContainer::CALOMET] = 0 ;
+    }
     if (anpset.exists("hltMETLabel")) {
-        _recLabels[EVTColContainer::HLTMET] = anpset.getParameter<edm::InputTag>("hltMETLabel");
-        _genSelectorMap[EVTColContainer::HLTMET] = 0 ;
+        _recLabels[EVTColContainer::CALOMET] = anpset.getParameter<edm::InputTag>("hltMETLabel");
+        _genSelectorMap[EVTColContainer::CALOMET] = 0 ;
     }
     if (anpset.exists("l1METLabel")) {
         _recLabels[EVTColContainer::L1MET] = anpset.getParameter<edm::InputTag>("l1METLabel");
@@ -744,7 +750,12 @@ void HLTExoticaSubAnalysis::registerConsumes(edm::ConsumesCollector & iC)
 	    edm::EDGetToken token(particularToken);
 	    _tokens[it->first] = token;
 	} 
-	else if (it->first == EVTColContainer::HLTMET) {
+	else if (it->first == EVTColContainer::CALOMET) {
+            edm::EDGetTokenT<reco::CaloMETCollection> particularToken = iC.consumes<reco::CaloMETCollection>(it->second);
+	    edm::EDGetToken token(particularToken);
+	    _tokens[it->first] = token;
+	} 
+	else if (it->first == EVTColContainer::CALOMET) {
             edm::EDGetTokenT<reco::CaloMETCollection> particularToken = iC.consumes<reco::CaloMETCollection>(it->second);
 	    edm::EDGetToken token(particularToken);
 	    _tokens[it->first] = token;
@@ -844,7 +855,7 @@ void HLTExoticaSubAnalysis::getHandlesToObjects(const edm::Event & iEvent, EVTCo
             iEvent.getByToken(it->second, theHandle);
             col->set(theHandle.product());
         } 
-        else if (it->first == EVTColContainer::HLTMET) {
+        else if (it->first == EVTColContainer::CALOMET) {
             edm::Handle<reco::CaloMETCollection> theHandle;
             iEvent.getByToken(it->second, theHandle);
             col->set(theHandle.product());
@@ -963,8 +974,8 @@ void HLTExoticaSubAnalysis::initSelector(const unsigned int & objtype)
         _recPFMETSelector = new StringCutObjectSelector<reco::PFMET>(_recCut[objtype]);
     } else if (objtype == EVTColContainer::GENMET && _genMETSelector == 0) {
         _genMETSelector = new StringCutObjectSelector<reco::GenMET>(_recCut[objtype]);
-    } else if (objtype == EVTColContainer::HLTMET && _hltMETSelector == 0) {
-        _hltMETSelector = new StringCutObjectSelector<reco::CaloMET>(_recCut[objtype]);
+    } else if (objtype == EVTColContainer::CALOMET && _recCaloMETSelector == 0) {
+        _recCaloMETSelector = new StringCutObjectSelector<reco::CaloMET>(_recCut[objtype]);
     } else if (objtype == EVTColContainer::L1MET && _l1METSelector == 0) {
         _l1METSelector = new StringCutObjectSelector<l1extra::L1EtMissParticle>(_recCut[objtype]);
     } else if (objtype == EVTColContainer::PFTAU && _recPFTauSelector == 0) {
@@ -1051,11 +1062,11 @@ void HLTExoticaSubAnalysis::insertCandidates(const unsigned int & objType, const
 		matches->push_back(m);
 	    }
         }
-    } else if (objType == EVTColContainer::HLTMET) {
-        for (size_t i = 0; i < cols->hltMETs->size(); i++) {
-            LogDebug("ExoticaValidation") << "Inserting HLTMET " << i ;
-            if (_hltMETSelector->operator()(cols->hltMETs->at(i))) {
-                reco::LeafCandidate m(0, cols->hltMETs->at(i).p4(), cols->hltMETs->at(i).vertex(), objType, 0, true);
+    } else if (objType == EVTColContainer::CALOMET) {
+        for (size_t i = 0; i < cols->caloMETs->size(); i++) {
+            LogDebug("ExoticaValidation") << "Inserting CALOMET " << i ;
+            if (_recCaloMETSelector->operator()(cols->caloMETs->at(i))) {
+                reco::LeafCandidate m(0, cols->caloMETs->at(i).p4(), cols->caloMETs->at(i).vertex(), objType, 0, true);
                 matches->push_back(m);
             }
         }

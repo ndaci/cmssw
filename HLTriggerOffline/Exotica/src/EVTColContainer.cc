@@ -52,8 +52,9 @@ struct EVTColContainer {
         PFMET   = 39,
         MET     = 390000, //RY
         GENMET  = 390001, //RY
-        HLTMET  = 390002, //RY
-        L1MET   = 390003, //RY
+        CALOMET = 390002, //RY
+        HLTMET  = 390003, //RY
+        L1MET   = 390004, //RY
         PFJET   = 211,
         CALOJET = 111, //ND
         _nMAX
@@ -69,7 +70,7 @@ struct EVTColContainer {
     const std::vector<reco::MET>                 * METs;
     const std::vector<reco::PFMET>               * pfMETs;
     const std::vector<reco::GenMET>              * genMETs;
-    const std::vector<reco::CaloMET>             * hltMETs;
+    const std::vector<reco::CaloMET>             * caloMETs;
     const std::vector<l1extra::L1EtMissParticle> * l1METs;
     const std::vector<reco::PFTau>               * pfTaus;
     const std::vector<reco::PFJet>               * pfJets;
@@ -86,7 +87,7 @@ struct EVTColContainer {
         METs(0),
         pfMETs(0),
         genMETs(0),
-        hltMETs(0),
+        caloMETs(0),
         l1METs(0),
         pfTaus(0),
         pfJets(0),
@@ -117,7 +118,7 @@ struct EVTColContainer {
         METs = 0;
         pfMETs = 0;
         genMETs = 0;
-        hltMETs = 0;
+        caloMETs = 0;
         l1METs = 0;
         pfTaus = 0;
         pfJets = 0;
@@ -163,7 +164,7 @@ struct EVTColContainer {
     }
     void set(const reco::CaloMETCollection * v)
     {
-        hltMETs = v;
+        caloMETs = v;
         ++nInitialized;
     }
     void set(const l1extra::L1EtMissParticleCollection * v)
@@ -207,8 +208,8 @@ struct EVTColContainer {
             size = pfMETs->size();
         } else if (objtype == EVTColContainer::GENMET && genMETs != 0) {
             size = genMETs->size();
-        } else if (objtype == EVTColContainer::HLTMET && hltMETs != 0) {
-            size = hltMETs->size();
+        } else if (objtype == EVTColContainer::CALOMET && caloMETs != 0) {
+            size = caloMETs->size();
         } else if (objtype == EVTColContainer::L1MET && l1METs != 0) {
             size = l1METs->size();
         } else if (objtype == EVTColContainer::PFTAU && pfTaus != 0) {
@@ -243,8 +244,8 @@ struct EVTColContainer {
             objTypestr = "PFMET";
         } else if (objtype == EVTColContainer::GENMET) {
             objTypestr = "GenMET";
-        } else if (objtype == EVTColContainer::HLTMET) {
-            objTypestr = "hltMET";
+        } else if (objtype == EVTColContainer::CALOMET) {
+            objTypestr = "CaloMET";
         } else if (objtype == EVTColContainer::L1MET) {
             objTypestr = "l1MET";
         } else if (objtype == EVTColContainer::PFTAU) {
