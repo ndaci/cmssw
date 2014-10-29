@@ -63,7 +63,7 @@ plot_types = ["TurnOn1", "TurnOn2", "TurnOn3", "EffEta", "EffPhi"]
 #--- IMPORTANT: Update this collection whenever you introduce a new object
 #               in the code (from EVTColContainer::getTypeString)
 obj_types  = ["Mu","refittedStandAloneMuons","Track","Ele","Photon","PFTau","PFJet","MET","PFMET","GenMET","CaloJet"
-             ]# ,"hltMET","l1MET"] # Work in progress
+             ,"CaloMET"]#,"l1MET"] # Work in progress
 #--- IMPORTANT: Trigger are extracted from the hltExoticaValidator_cfi.py module
 triggers = [ ] 
 efficiency_strings = []
@@ -159,6 +159,18 @@ hltExoticaPostMETplusTrack = hltExoticaPostProcessor.clone()
 hltExoticaPostMETplusTrack.subDirs = ['HLT/Exotica/METplusTrack']
 hltExoticaPostMETplusTrack.efficiencyProfile = efficiency_strings
 
+hltExoticaDisplacedDimuonDijet = hltExoticaPostProcessor.clone()
+hltExoticaDisplacedDimuonDijet.subDirs = ['HLT/Exotica/DisplacedDimuonDijet']
+hltExoticaDisplacedDimuonDijet.efficiencyProfile = efficiency_strings
+
+hltExoticaEleMu = hltExoticaPostProcessor.clone()
+hltExoticaEleMu.subDirs = ['HLT/Exotica/EleMu']
+hltExoticaEleMu.efficiencyProfile = efficiency_strings
+
+hltExoticaHTDisplacedJets = hltExoticaPostProcessor.clone()
+hltExoticaHTDisplacedJets.subDirs = ['HLT/Exotica/HTDisplacedJets']
+hltExoticaHTDisplacedJets.efficiencyProfile = efficiency_strings
+
 hltExoticaPostProcessors = cms.Sequence(
     # Di-lepton paths
     hltExoticaPostHighPtDimuon +
@@ -183,5 +195,8 @@ hltExoticaPostProcessors = cms.Sequence(
     # Others (to be properly integrated)
     hltExoticaPostMonojet +
     hltExoticaPostPureMET +
-    hltExoticaPostMETplusTrack
+    hltExoticaPostMETplusTrack +
+    hltExoticaDisplacedDimuonDijet +
+    hltExoticaEleMu +
+    hltExoticaHTDisplacedJets
     )
