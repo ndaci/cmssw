@@ -14,7 +14,7 @@ MonojetPSet = cms.PSet(
     recPFMETLabel    = cms.InputTag("pfMet"),
     recCaloJetLabel  = cms.InputTag("ak4CaloJets"),
     # -- Analysis specific cuts
-    minCandidates = cms.uint32(2),
+    minCandidates = cms.uint32(1),
     # -- Analysis specific binnings
     parametersTurnOn = cms.vdouble( 0, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150,
                                     160, 170, 180, 190, 200,

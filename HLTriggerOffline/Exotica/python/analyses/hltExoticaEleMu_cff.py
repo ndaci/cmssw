@@ -7,7 +7,7 @@ EleMuPSet = cms.PSet(
     recElecLabel  = cms.InputTag("gedGsfElectrons"),
     recMuonLabel  = cms.InputTag("muons"),
     # -- Analysis specific cuts
-    minCandidates = cms.uint32(2),
+    minCandidates = cms.uint32(1),
     # -- Analysis specific binnings
     parametersTurnOn = cms.vdouble( 0, 5, 10, 15, 20,
                                     25, 30, 35, 40,
