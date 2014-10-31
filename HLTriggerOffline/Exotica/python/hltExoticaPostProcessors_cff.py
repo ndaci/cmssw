@@ -63,7 +63,7 @@ plot_types = ["TurnOn1", "TurnOn2", "TurnOn3", "EffEta", "EffPhi"]
 #--- IMPORTANT: Update this collection whenever you introduce a new object
 #               in the code (from EVTColContainer::getTypeString)
 obj_types  = ["Mu","refittedStandAloneMuons","Track","Ele","Photon","PFTau","PFJet","MET","PFMET","GenMET","CaloJet"
-             ,"CaloMET"]#,"l1MET"] # Work in progress
+             ,"CaloMET","l1MET"]
 #--- IMPORTANT: Trigger are extracted from the hltExoticaValidator_cfi.py module
 triggers = [ ] 
 efficiency_strings = []
@@ -151,6 +151,10 @@ hltExoticaPostMonojet = hltExoticaPostProcessor.clone()
 hltExoticaPostMonojet.subDirs = ['HLT/Exotica/Monojet']
 hltExoticaPostMonojet.efficiencyProfile = efficiency_strings
 
+hltExoticaPostMonojetBackup = hltExoticaPostProcessor.clone()
+hltExoticaPostMonojetBackup.subDirs = ['HLT/Exotica/MonojetBackup']
+hltExoticaPostMonojetBackup.efficiencyProfile = efficiency_strings
+
 hltExoticaPostPureMET = hltExoticaPostProcessor.clone()
 hltExoticaPostPureMET.subDirs = ['HLT/Exotica/PureMET']
 hltExoticaPostPureMET.efficiencyProfile = efficiency_strings
@@ -194,6 +198,7 @@ hltExoticaPostProcessors = cms.Sequence(
     hltExoticaPostDisplacedL2Dimuon +
     # Others (to be properly integrated)
     hltExoticaPostMonojet +
+    hltExoticaPostMonojetBackup +
     hltExoticaPostPureMET +
     hltExoticaPostMETplusTrack +
     hltExoticaDisplacedDimuonDijet +

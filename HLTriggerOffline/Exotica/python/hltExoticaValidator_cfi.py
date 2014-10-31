@@ -31,6 +31,7 @@ from HLTriggerOffline.Exotica.analyses.hltExoticaDisplacedL2Dimuon_cff import Di
 from HLTriggerOffline.Exotica.analyses.hltExoticaPureMET_cff           import PureMETPSet
 from HLTriggerOffline.Exotica.analyses.hltExoticaMETplusTrack_cff      import METplusTrackPSet
 from HLTriggerOffline.Exotica.analyses.hltExoticaMonojet_cff           import MonojetPSet
+from HLTriggerOffline.Exotica.analyses.hltExoticaMonojetBackup_cff     import MonojetBackupPSet
 from HLTriggerOffline.Exotica.analyses.hltExoticaDisplacedDimuonDijet_cff import DisplacedDimuonDijetPSet
 from HLTriggerOffline.Exotica.analyses.hltExoticaEleMu_cff             import EleMuPSet
 from HLTriggerOffline.Exotica.analyses.hltExoticaHTDisplacedJets_cff   import HTDisplacedJetsPSet
@@ -61,6 +62,7 @@ hltExoticaValidator = cms.EDAnalyzer(
                                  "PureMET",
                                  "METplusTrack",
                                  "Monojet",
+                                 "MonojetBackup",
                                  "DisplacedDimuonDijet",
                                  "EleMu",
                                  "HTDisplacedJets"
@@ -186,6 +188,7 @@ hltExoticaValidator = cms.EDAnalyzer(
     PureMET          = PureMETPSet,                                 
     METplusTrack     = METplusTrackPSet,                                 
     Monojet          = MonojetPSet,
+    MonojetBackup    = MonojetBackupPSet,
     HT               = HTPSet,
     DisplacedDimuonDijet = DisplacedDimuonDijetPSet,
     EleMu            = EleMuPSet,
