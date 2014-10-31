@@ -637,7 +637,7 @@ void HLTExoticaSubAnalysis::getNamesOfObjects(const edm::ParameterSet & anpset)
         _recLabels[EVTColContainer::MUTRK] = anpset.getParameter<edm::InputTag>("recMuonTrkLabel");
         _genSelectorMap[EVTColContainer::MUTRK] = 0 ;
     }
-    if (anpset.exists("recTrackkLabel")) {
+    if (anpset.exists("recTrackLabel")) {
         _recLabels[EVTColContainer::TRACK] = anpset.getParameter<edm::InputTag>("recTrackLabel");
         _genSelectorMap[EVTColContainer::TRACK] = 0 ;
     }
@@ -747,11 +747,6 @@ void HLTExoticaSubAnalysis::registerConsumes(edm::ConsumesCollector & iC)
 	} 
 	else if (it->first == EVTColContainer::GENMET) {
             edm::EDGetTokenT<reco::GenMETCollection> particularToken = iC.consumes<reco::GenMETCollection>(it->second);
-	    edm::EDGetToken token(particularToken);
-	    _tokens[it->first] = token;
-	} 
-	else if (it->first == EVTColContainer::CALOMET) {
-            edm::EDGetTokenT<reco::CaloMETCollection> particularToken = iC.consumes<reco::CaloMETCollection>(it->second);
 	    edm::EDGetToken token(particularToken);
 	    _tokens[it->first] = token;
 	} 

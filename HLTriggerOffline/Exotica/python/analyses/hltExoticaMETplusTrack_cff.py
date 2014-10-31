@@ -8,10 +8,10 @@ METplusTrackPSet = cms.PSet(
         "HLT_MET95_IsoTrk50_v" 
     ),
     recPFMETLabel = cms.InputTag("pfMet"),
-    recMETLabel   = cms.InputTag("hltPFMETProducer"),
+    #recMETLabel   = cms.InputTag("hltPFMETProducer"),
     genMETLabel   = cms.InputTag("genMetTrue"),
-    trackLabel    = cms.InputTag("hltIter2Merged"),
-    hltMETLabel   = cms.InputTag("hltMetClean"),                    
+    recTrackLabel = cms.InputTag("hltIter2Merged"),
+    #hltMETLabel   = cms.InputTag("hltMetClean"),                    
     l1METLabel    = cms.InputTag("l1extraParticles","MET"),   
     # -- Analysis specific cuts
     minCandidates = cms.uint32(1),
