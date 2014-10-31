@@ -90,9 +90,13 @@ HLTExoticaSubAnalysis::HLTExoticaSubAnalysis(const edm::ParameterSet & pset,
         _recCut[it->first] = pset.getParameter<std::string>(std::string(objStr + "_recCut").c_str());
         if (pset.exists(std::string(objStr + "_genCut_leading"))) {
           _genCut_leading[it->first] = pset.getParameter<std::string>(std::string(objStr + "_genCut_leading").c_str());
+        } else {
+          _genCut_leading[it->first] = "pt>0"; // no cut
         }
         if (pset.exists(std::string(objStr + "_recCut_leading"))) {
           _recCut_leading[it->first] = pset.getParameter<std::string>(std::string(objStr + "_recCut_leading").c_str());
+        } else {
+          _recCut_leading[it->first] = "pt>0"; // no cut
         }
     }
 
