@@ -1060,7 +1060,7 @@ void HLTExoticaSubAnalysis::insertCandidates(const unsigned int & objType, const
 	    LogDebug("ExoticaValidation") << "Inserting muonTrack " << i ;
 	    if (_recMuonTrkSelector->operator()(cols->tracks->at(i))) {
 		ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>> mom4;
-                ROOT::Math::XYZVector mom3 = cols->tracks->at(i).innerMomentum();
+                ROOT::Math::XYZVector mom3 = cols->tracks->at(i).momentum();
                 mom4.SetXYZT(mom3.x(),mom3.y(),mom3.z(),mom3.r());
 		reco::LeafCandidate m(0, mom4, cols->tracks->at(i).vertex(), objType, 0, true);
 		matches->push_back(m);
