@@ -105,7 +105,7 @@ private:
     /// This function applies the selectors initialized previously to the objects,
     /// and matches the passing objects to HLT objects.
     void insertCandidates(const unsigned int & objtype, const EVTColContainer * col,
-                          std::vector<reco::LeafCandidate> * matches);
+                          std::vector<reco::LeafCandidate> * matches, double & theSumEt);
 
     /// The internal functions to book and fill histograms
     void bookHist(DQMStore::IBooker &iBooker, const std::string & source, const std::string & objType,

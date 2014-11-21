@@ -338,17 +338,10 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 
     // Extract the match structure containing the gen/reco candidates (electron, muons,...). This part is common to all the SubAnalyses
 
-    //std::map<unsigned int, std::vector<MatchStruct> > sourceMatchMap;
-    //std::vector<MatchStruct> matchesGen; matchesGen.clear();
     std::vector<reco::LeafCandidate> matchesGen; matchesGen.clear();
-    //std::vector<MatchStruct> matchesReco; matchesReco.clear();
     std::vector<reco::LeafCandidate> matchesReco; matchesReco.clear();
-    //sourceMatchMap[98] = matchesGen;
-    //sourceMatchMap[99] = matchesReco;
+    double theSumEt=0;
 
-    //std::cout << "In the beginning: matchesGen.size() = " << matchesGen.size() << std::endl;
-    //std::cout << "In the beginning: matchesReco.size() = " << matchesReco.size() << std::endl;
-    
     // --- deal with GEN objects first.
     // Make each good GEN object into the base cand for a MatchStruct
     // Our definition of "good" is "passes the selector" defined in the config.py
@@ -403,7 +396,7 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
         // before or not) ### Thiago ---> Then why don't we put it in the beginRun???
         this->initSelector(it->first);
         // -- Storing the matchesReco
-        this->insertCandidates(it->first, cols, &matchesReco);
+        this->insertCandidates(it->first, cols, &matchesReco, theSumEt);
     }
 
     //std::cout << "After adding RECO: matchesGen.size() = " << matchesGen.size() << std::endl;
@@ -507,16 +500,14 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 		}
 	    }
 
-
 	    float eta = matchesGen[j].eta();
 	    float phi = matchesGen[j].phi();
-	    //float sumEt = 0;//matchesGen[j].sumEt;
 
             if (objTypeStr.find("MET") > objTypeStr.size()) { 
 	      this->fillHist("gen", objTypeStr, "Eta", eta);
 	      this->fillHist("gen", objTypeStr, "Phi", phi);
             }
-	    //this->fillHist("gen", objTypeStr, "SumEt", sumEt);
+	    //this->fillHist("gen", objTypeStr, "SumEt", theSumEt);
 
 	} // Closes loop in gen
 	//LogDebug("ExoticaValidation") << "                        deleting countobjects";
@@ -528,7 +519,7 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 	    const std::string hltPath = _shortpath2long[an->gethltpath()];
 	    const bool ispassTrigger =  cols->triggerResults->accept(trigNames.triggerIndex(hltPath));
 	    LogDebug("ExoticaValidation") << "                        preparing to call the plotters analysis";
-	    an->analyze(ispassTrigger, "gen", matchesGen);
+	    an->analyze(ispassTrigger, "gen", matchesGen, -1);
 	    LogDebug("ExoticaValidation") << "                        called the plotter";
         }
     } /// Close GEN case
@@ -617,7 +608,10 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 	      this->fillHist("rec", objTypeStr, "Eta", eta);
 	      this->fillHist("rec", objTypeStr, "Phi", phi);
             }
-	    //this->fillHist("rec", objTypeStr, "SumEt", sumEt);
+	    else {
+	      this->fillHist("rec", objTypeStr, "SumEt", theSumEt);
+	    }
+
 	} // Closes loop in reco
 
 	//LogDebug("ExoticaValidation") << "                        deleting countobjects";
@@ -629,7 +623,7 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 	    const std::string hltPath = _shortpath2long[an->gethltpath()];
 	    const bool ispassTrigger =  cols->triggerResults->accept(trigNames.triggerIndex(hltPath));
 	    LogDebug("ExoticaValidation") << "                        preparing to call the plotters analysis";
-	    an->analyze(ispassTrigger, "rec", matchesReco);
+	    an->analyze(ispassTrigger, "rec", matchesReco, theSumEt);
 	    LogDebug("ExoticaValidation") << "                        called the plotter";
 	}
     } /// Close RECO case
@@ -1042,10 +1036,12 @@ void HLTExoticaSubAnalysis::initSelector(const unsigned int & objtype)
 }
 
 // Insert the HLT candidates
-void HLTExoticaSubAnalysis::insertCandidates(const unsigned int & objType, const EVTColContainer * cols, std::vector<reco::LeafCandidate> * matches)
+void HLTExoticaSubAnalysis::insertCandidates(const unsigned int & objType, const EVTColContainer * cols, std::vector<reco::LeafCandidate> * matches, double & theSumEt)
 {
     
     LogDebug("ExoticaValidation") << "In HLTExoticaSubAnalysis::insertCandidates()"; 
+
+    theSumEt = 0;
     
     if (objType == EVTColContainer::MUON) {
         for (size_t i = 0; i < cols->muons->size(); i++) {
@@ -1102,6 +1098,7 @@ void HLTExoticaSubAnalysis::insertCandidates(const unsigned int & objType, const
 	    if (_recPFMETSelector->operator()(cols->pfMETs->at(i))) {
 		reco::LeafCandidate m(0, cols->pfMETs->at(i).p4(), cols->pfMETs->at(i).vertex(), objType, 0, true);
 		matches->push_back(m);
+		if(i==0) theSumEt = cols->pfMETs->at(i).sumEt();
 	    }
         }
     } else if (objType == EVTColContainer::GENMET) {
@@ -1110,6 +1107,7 @@ void HLTExoticaSubAnalysis::insertCandidates(const unsigned int & objType, const
 	    if (_genMETSelector->operator()(cols->genMETs->at(i))) {
 		reco::LeafCandidate m(0, cols->genMETs->at(i).p4(), cols->genMETs->at(i).vertex(), objType, 0, true);
 		matches->push_back(m);
+		if(i==0) theSumEt = cols->genMETs->at(i).sumEt();
 	    }
         }
     } else if (objType == EVTColContainer::CALOMET) {
@@ -1118,6 +1116,7 @@ void HLTExoticaSubAnalysis::insertCandidates(const unsigned int & objType, const
             if (_recCaloMETSelector->operator()(cols->caloMETs->at(i))) {
                 reco::LeafCandidate m(0, cols->caloMETs->at(i).p4(), cols->caloMETs->at(i).vertex(), objType, 0, true);
                 matches->push_back(m);
+		if(i==0) theSumEt = cols->caloMETs->at(i).sumEt();
             }
         }
     } else if (objType == EVTColContainer::L1MET) {
@@ -1126,6 +1125,7 @@ void HLTExoticaSubAnalysis::insertCandidates(const unsigned int & objType, const
             if (_l1METSelector->operator()(cols->l1METs->at(i))) {
                 reco::LeafCandidate m(0, cols->l1METs->at(i).p4(), cols->l1METs->at(i).vertex(), objType, 0, true);
                 matches->push_back(m);
+		if(i==0) theSumEt = cols->l1METs->at(i).etTotal();
             }
         }
     } else if (objType == EVTColContainer::PFTAU) {

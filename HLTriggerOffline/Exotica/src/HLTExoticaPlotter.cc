@@ -61,16 +61,20 @@ void HLTExoticaPlotter::plotterBookHistos(DQMStore::IBooker & iBooker,
               bookHist(iBooker, source, objTypeStr, "Eta");
               bookHist(iBooker, source, objTypeStr, "Phi");
             }
+	    else {
+	      bookHist(iBooker, source, objTypeStr, "SumEt");
+	    }
             bookHist(iBooker, source, objTypeStr, "MaxPt1");
             bookHist(iBooker, source, objTypeStr, "MaxPt2");
-            //bookHist(iBooker, source, objTypeStr, "SumEt");
+
         }
     }
 }
 
 void HLTExoticaPlotter::analyze(const bool & isPassTrigger,
                                 const std::string & source,
-                                const std::vector<reco::LeafCandidate> & matches)
+                                const std::vector<reco::LeafCandidate> & matches,
+				double theSumEt)
 {
     LogDebug("ExoticaValidation") << "In HLTExoticaPlotter::analyze()";
     if (!isPassTrigger) {
@@ -99,12 +103,14 @@ void HLTExoticaPlotter::analyze(const bool & isPassTrigger,
         float pt  =   matches[j].pt();
         float eta =   matches[j].eta();
         float phi =   matches[j].phi();
-	//float sumEt = 0;//matches[j].sumEt;
+
         if (objTypeStr.find("MET") > objTypeStr.size()) { 
           this->fillHist(isPassTrigger, source, objTypeStr, "Eta", eta);
           this->fillHist(isPassTrigger, source, objTypeStr, "Phi", phi);
         }
-	//this->fillHist(isPassTrigger, source, objTypeStr, "SumEt", sumEt);
+	else if(theSumEt>=0) {
+	  this->fillHist(isPassTrigger, source, objTypeStr, "SumEt", theSumEt);
+	}
 
         if (countobjects[objType] == 0) {
             this->fillHist(isPassTrigger, source, objTypeStr, "MaxPt1", pt);
