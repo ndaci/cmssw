@@ -195,9 +195,11 @@ void HLTExoticaSubAnalysis::subAnalysisBookHistos(DQMStore::IBooker &iBooker,
               bookHist(iBooker, source, objStr, "Eta");
               bookHist(iBooker, source, objStr, "Phi");
             }
+	    else {
+	      if(i==1) bookHist(iBooker, source, objStr, "SumEt");
+	    }
             bookHist(iBooker, source, objStr, "MaxPt1");
             bookHist(iBooker, source, objStr, "MaxPt2");
-            //bookHist(iBooker, source, objStr, "SumEt");
         }
     } // closes loop in _recLabels
 
