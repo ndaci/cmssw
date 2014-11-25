@@ -51,7 +51,7 @@ public:
     void plotterBookHistos(DQMStore::IBooker & iBooker, const edm::Run & iRun, const edm::EventSetup & iSetup);
     void analyze(const bool & isPassTrigger, const std::string & source,
                  const std::vector<reco::LeafCandidate> & matches,
-		 double theSumEt);
+		 std::map<int,double> theSumEt);
 
     inline const std::string gethltpath() const
     {

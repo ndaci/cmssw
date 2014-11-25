@@ -189,17 +189,22 @@ void HLTExoticaSubAnalysis::subAnalysisBookHistos(DQMStore::IBooker &iBooker,
         sources[1] = "rec";
 	
         for (size_t i = 0; i < sources.size(); i++) {
-            std::string source = sources[i];
-            if (objStr == "GenMET" && source == "gen") continue; // genGenMET doesn't make sense. 
-            if (objStr.find("MET") > objStr.size()) { 
-              bookHist(iBooker, source, objStr, "Eta");
-              bookHist(iBooker, source, objStr, "Phi");
-            }
-	    else {
-	      if(i==1) bookHist(iBooker, source, objStr, "SumEt");
-	    }
-            bookHist(iBooker, source, objStr, "MaxPt1");
-            bookHist(iBooker, source, objStr, "MaxPt2");
+	  std::string source = sources[i];
+
+	  if ( !TString(objStr).Contains("MET") || source!="gen" ) {
+	    bookHist(iBooker, source, objStr, "MaxPt1");
+	  }
+
+	  if ( ! TString(objStr).Contains("MET") ) { 
+	    bookHist(iBooker, source, objStr, "Eta");
+	    bookHist(iBooker, source, objStr, "Phi");
+	    bookHist(iBooker, source, objStr, "MaxPt2");
+	  }
+	  else { // MET case
+	    if (source == "gen") continue; // gen {any kind of}MET doesn't make sense. 
+	    else bookHist(iBooker, source, objStr, "SumEt");
+	  }
+
         }
     } // closes loop in _recLabels
 
@@ -339,10 +344,9 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
     //u2str[Level::RECO] = "rec";
 
     // Extract the match structure containing the gen/reco candidates (electron, muons,...). This part is common to all the SubAnalyses
-
     std::vector<reco::LeafCandidate> matchesGen; matchesGen.clear();
     std::vector<reco::LeafCandidate> matchesReco; matchesReco.clear();
-    double theSumEt=0;
+    std::map<int , double> theSumEt; // map< pdgId ; SumEt > in order to keep track of the MET type
 
     // --- deal with GEN objects first.
     // Make each good GEN object into the base cand for a MatchStruct
@@ -369,7 +373,7 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
                 const reco::Candidate* cand = &(cols->genParticles->at(i));
 		//std::cout << "Found good cand: cand->pt() = " << cand->pt() << std::endl;
 		//matchesGen.push_back(MatchStruct(cand, it->first));
-		/// We are going to make a fake LeafCandidate, with our particleType as the pdgId.
+		/// We are going to make a fake reco::LeafCandidate, with our particleType as the pdgId.
 		/// This is an alternative to the older implementation with MatchStruct.
 		reco::LeafCandidate v(0,cand->p4(),cand->vertex(),it->first,0,true);
 		matchesGen.push_back(v);
@@ -379,44 +383,36 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 
     // Sort the matches by pT for later filling of turn-on curve
     //std::cout << "Before sorting: matchesGen.size() = " << matchesGen.size() << std::endl;
-    GreaterByPt<reco::LeafCandidate> comparator;
-    std::sort(matchesGen.begin(), 
-	      matchesGen.end(), 
-	      comparator);
-    //std::cout << "After sorting: matchesGen.size() = " << matchesGen.size() << std::endl;
 
-    //std::cout << "Before adding RECO: sourceMatchMap[98].size() = " << sourceMatchMap[98].size() << std::endl;
-    //std::cout << "Before adding RECO: matchesGen.size() = " << matchesGen.size() << std::endl;
+    // GreaterByPt<reco::LeafCandidate> comparator;
+    // std::sort(matchesGen.begin(), 
+    // 	      matchesGen.end(), 
+    // 	      comparator);
 
     // --- same for RECO objects
     // Extraction of the objects candidates
+    std::cout << "-- enter loop over recLabels" << std::endl;
     for (std::map<unsigned int, edm::InputTag>::iterator it = _recLabels.begin();
          it != _recLabels.end(); ++it) {
-	//std::cout << "Filling RECO \"matchesReco\" vector for particle kind it->first = "
-	//	  << it->first << ", which means " << it->second.label() << std::endl;
-        // Reco selectors (the function takes into account if it was instantiated
-        // before or not) ### Thiago ---> Then why don't we put it in the beginRun???
-        this->initSelector(it->first);
-        // -- Storing the matchesReco
-        this->insertCandidates(it->first, cols, &matchesReco, theSumEt);
+      //std::cout << "Filling RECO \"matchesReco\" vector for particle kind it->first = "
+      //	  << it->first << ", which means " << it->second.label() << std::endl;
+      // Reco selectors (the function takes into account if it was instantiated
+      // before or not) ### Thiago ---> Then why don't we put it in the beginRun???
+      this->initSelector(it->first);
+      // -- Storing the matchesReco
+      this->insertCandidates(it->first, cols, &matchesReco, theSumEt);
+      if(verbose>-1) std::cout << "--- " << EVTColContainer::getTypeString(it->first) 
+			       << " sumEt=" << theSumEt[it->first] << std::endl;
     }
 
-    //std::cout << "After adding RECO: matchesGen.size() = " << matchesGen.size() << std::endl;
-    //std::cout << "After adding RECO: matchesReco.size() = " << matchesReco.size() << std::endl;
-
-    std::sort(matchesReco.begin(), 
-	      matchesReco.end(), 
-	      comparator);
-
-
-    // --- All the objects are in place
-    //std::cout << "DEBUG(0)" << std::endl;
+    // std::sort(matchesReco.begin(), 
+    // 	      matchesReco.end(), 
+    // 	      comparator);
 
     // -- Trigger Results
     const edm::TriggerNames trigNames = iEvent.triggerNames(*(cols->triggerResults));
 
     /// Filling the histograms if pass the minimum amount of candidates needed by the analysis:
-    /// First do the GEN case
 
     //for (std::map<unsigned int, std::vector<MatchStruct> >::iterator it = sourceMatchMap.begin(); it != sourceMatchMap.end(); ++it) {
     // it->first: gen/reco   it->second: HLT matches (std::vector<MatchStruct>)
@@ -429,103 +425,96 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
     /// GEN CASE ///
     //////////////// 
     {
-	if(matchesGen.size() < _minCandidates) return; // FIXME: A bug is potentially here: what about the mixed channels?
-	// Okay, there are enough candidates. Move on!
+      if(matchesGen.size() < _minCandidates) return; // FIXME: A bug is potentially here: what about the mixed channels?
+      // Okay, there are enough candidates. Move on!
+
+      // Filling the gen/reco objects (eff-denominators):
+      // Just the first two different ones, if there are more
+      // The countobjects maps uints (object types, really) --> integers.
+      // Example:
+      // | uint | int |
+      // |  0   |  1  | --> 1 muon used
+      // |  1   |  2  | --> 2 electrons used  
+
+      // Initializing the count of the used objects.
+      std::map<unsigned int, int> countobjects;
+      for (std::map<unsigned int, edm::InputTag>::iterator co = _recLabels.begin();
+	   co != _recLabels.end(); ++co) {
+	//countobjects->insert(std::pair<unsigned int, int>(co->first, 0));
+	countobjects.insert(std::pair<unsigned int, int>(co->first, 0));
+      }
     
-	// Filling the gen/reco objects (eff-denominators):
-	// Just the first two different ones, if there are more
-	// The countobjects maps uints (object types, really) --> integers.
-	// Example:
-	// | uint | int |
-	// |  0   |  1  | --> 1 muon used
-	// |  1   |  2  | --> 2 electrons used  
-	// Initializing the count of the used objects.
-	//std::map<unsigned int, int> * countobjects = new std::map<unsigned int, int>;
-	std::map<unsigned int, int> countobjects;
-	for (std::map<unsigned int, edm::InputTag>::iterator co = _recLabels.begin();
-	     co != _recLabels.end(); ++co) {
-	    //countobjects->insert(std::pair<unsigned int, int>(co->first, 0));
-	    countobjects.insert(std::pair<unsigned int, int>(co->first, 0));
+      int counttotal = 0;
+      //int totalobjectssize2 = 2 * countobjects->size();
+      int totalobjectssize2 = 2 * countobjects.size();
+
+      for (size_t j = 0; j != matchesGen.size(); ++j) {
+	const unsigned int objType = matchesGen[j].pdgId();
+	//std::cout << "(4) Gonna call with " << objType << std::endl;
+	const std::string objTypeStr = EVTColContainer::getTypeString(objType);
+
+	if (TString(objTypeStr).Contains("MET")) { // genAnyMET doesn't make sense. 
+	  size_t max_size = matchesGen.size();
+	  for ( size_t jj = j; jj < max_size; jj++ ) {
+	    matchesGen.erase(matchesGen.end());
+	  }
+	  break;
 	}
-    
-	int counttotal = 0;
-	//int totalobjectssize2 = 2 * countobjects->size();
-	int totalobjectssize2 = 2 * countobjects.size();
-    
-	for (size_t j = 0; j != matchesGen.size(); ++j) {
-	    const unsigned int objType = matchesGen[j].pdgId();
-	    //std::cout << "(4) Gonna call with " << objType << std::endl;
-	    const std::string objTypeStr = EVTColContainer::getTypeString(objType);
+	  
+	float pt  = matchesGen[j].pt();
 
-            if (objTypeStr == "GenMET") { // genGenMET doesn't make sense. 
-              size_t max_size = matchesGen.size();
-              for ( size_t jj = j; jj < max_size; jj++ ) {
-                 matchesGen.erase(matchesGen.end());
-              }
-              break;
-            }
-	
-	    float pt  = matchesGen[j].pt();
+	if (countobjects[objType] == 0) {
 
-	    //if ((*countobjects)[objType] == 0) {
-	    if (countobjects[objType] == 0) {
-
-                // Cut for the pt-leading object 
-                StringCutObjectSelector<reco::LeafCandidate> select( _genCut_leading[objType] );
-                if ( !select( matchesGen[j] ) ) {
-                  size_t max_size = matchesGen.size();
-                  for ( size_t jj = j; jj < max_size; jj++ ) {
-                    matchesGen.erase(matchesGen.end());
-                  }
-                  break;
-                }
-		this->fillHist("gen", objTypeStr, "MaxPt1", pt);
-		// Filled the high pt ...
-		//++((*countobjects)[objType]);
-		++(countobjects[objType]);
-		++counttotal;
-	    //} else if ((*countobjects)[objType] == 1) {
-	    } else if (countobjects[objType] == 1) {
-		this->fillHist("gen", objTypeStr, "MaxPt2", pt);
-		// Filled the second high pt ...
-		//++((*countobjects)[objType]);
-		++(countobjects[objType]);
-		++counttotal;
-	    } else {
-		// Already the minimum two objects has been filled, get out...
-		if (counttotal == totalobjectssize2) {
-                  size_t max_size = matchesGen.size();
-                  for ( size_t jj = j; jj < max_size; jj++ ) {
-                    matchesGen.erase(matchesGen.end());
-                  }
-		  break;
-		}
+	  // Cut for the pt-leading object 
+	  StringCutObjectSelector<reco::LeafCandidate> select( _genCut_leading[objType] );
+	  if ( !select( matchesGen[j] ) ) {
+	    size_t max_size = matchesGen.size();
+	    for ( size_t jj = j; jj < max_size; jj++ ) {
+	      matchesGen.erase(matchesGen.end());
 	    }
+	    break;
+	  }
 
-	    float eta = matchesGen[j].eta();
-	    float phi = matchesGen[j].phi();
+	  this->fillHist("gen", objTypeStr, "MaxPt1", pt);
+	  ++(countobjects[objType]);
+	  ++counttotal;
 
-            if (objTypeStr.find("MET") > objTypeStr.size()) { 
-	      this->fillHist("gen", objTypeStr, "Eta", eta);
-	      this->fillHist("gen", objTypeStr, "Phi", phi);
-            }
-	    //this->fillHist("gen", objTypeStr, "SumEt", theSumEt);
+	} 
+	else if (countobjects[objType] == 1) {
+	  this->fillHist("gen", objTypeStr, "MaxPt2", pt);
+	  ++(countobjects[objType]);
+	  ++counttotal;
+	} 
+	else {
+	  // Already the minimum two objects has been filled, get out...
+	  if (counttotal == totalobjectssize2) {
+	    size_t max_size = matchesGen.size();
+	    for ( size_t jj = j; jj < max_size; jj++ ) {
+	      matchesGen.erase(matchesGen.end());
+	    }
+	    break;
+	  }
+	}
+	    
+	float eta = matchesGen[j].eta();
+	float phi = matchesGen[j].phi();
 
-	} // Closes loop in gen
-	//LogDebug("ExoticaValidation") << "                        deleting countobjects";
-	//delete countobjects;
+	this->fillHist("gen", objTypeStr, "Eta", eta);
+	this->fillHist("gen", objTypeStr, "Phi", phi);
+	//this->fillHist("gen", objTypeStr, "SumEt", theSumEt);
 
-	// Calling to the plotters analysis (where the evaluation of the different trigger paths are done)
-	//const std::string source = "gen";
-	for (std::vector<HLTExoticaPlotter>::iterator an = _plotters.begin(); an != _plotters.end(); ++an) {
-	    const std::string hltPath = _shortpath2long[an->gethltpath()];
-	    const bool ispassTrigger =  cols->triggerResults->accept(trigNames.triggerIndex(hltPath));
-	    LogDebug("ExoticaValidation") << "                        preparing to call the plotters analysis";
-	    an->analyze(ispassTrigger, "gen", matchesGen, -1);
-	    LogDebug("ExoticaValidation") << "                        called the plotter";
-        }
+      } // Closes loop in gen
+	
+      // Calling to the plotters analysis (where the evaluation of the different trigger paths are done)
+      //const std::string source = "gen";
+      for (std::vector<HLTExoticaPlotter>::iterator an = _plotters.begin(); an != _plotters.end(); ++an) {
+	const std::string hltPath = _shortpath2long[an->gethltpath()];
+	const bool ispassTrigger =  cols->triggerResults->accept(trigNames.triggerIndex(hltPath));
+	LogDebug("ExoticaValidation") << "                        preparing to call the plotters analysis";
+	an->analyze(ispassTrigger, "gen", matchesGen, theSumEt);
+	LogDebug("ExoticaValidation") << "                        called the plotter";
+      }
     } /// Close GEN case
-
 
     ///////////////// 
     /// RECO CASE ///
@@ -547,8 +536,7 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 	std::map<unsigned int, int> countobjects;
 	for (std::map<unsigned int, edm::InputTag>::iterator co = _recLabels.begin();
 	     co != _recLabels.end(); ++co) {
-	    //countobjects->insert(std::pair<unsigned int, int>(co->first, 0));
-	    countobjects.insert(std::pair<unsigned int, int>(co->first, 0));
+	  countobjects.insert(std::pair<unsigned int, int>(co->first, 0));
 	}
     
 	int counttotal = 0;
@@ -580,38 +568,36 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
                 }
 
 		this->fillHist("rec", objTypeStr, "MaxPt1", pt);
-		// Filled the high pt ...
-		//++((*countobjects)[objType]);
 		++(countobjects[objType]);
 		++counttotal;
-	    //} else if ((*countobjects)[objType] == 1) {
-	    } else if (countobjects[objType] == 1) {
+	    } 
+	    else if (countobjects[objType] == 1) {
+	      if( ! TString(objTypeStr).Contains("MET") ) {
 		this->fillHist("rec", objTypeStr, "MaxPt2", pt);
-		// Filled the second high pt ...
-		//++((*countobjects)[objType]);
-		++(countobjects[objType]);
-		++counttotal;
-	    } else {
-		// Already the minimum two objects has been filled, get out...
-		if (counttotal == totalobjectssize2) {
-                  size_t max_size = matchesReco.size();
-                  for ( size_t jj = j; jj < max_size; jj++ ) {
-                    matchesReco.erase(matchesReco.end());
-                  }
-		  break;
+	      }
+	      ++(countobjects[objType]);
+	      ++counttotal;
+	    } 
+	    else {
+	      // Already the minimum two objects has been filled, get out...
+	      if (counttotal == totalobjectssize2) {
+		size_t max_size = matchesReco.size();
+		for ( size_t jj = j; jj < max_size; jj++ ) {
+		  matchesReco.erase(matchesReco.end());
 		}
+		break;
+	      }
 	    }
 
 	    float eta = matchesReco[j].eta();
 	    float phi = matchesReco[j].phi();
-	    //float sumEt = 0;//matchesReco[j].sumEt;
 	
-            if (objTypeStr.find("MET") > objTypeStr.size()) { 
+            if ( ! TString(objTypeStr).Contains("MET") ) { 
 	      this->fillHist("rec", objTypeStr, "Eta", eta);
 	      this->fillHist("rec", objTypeStr, "Phi", phi);
             }
 	    else {
-	      this->fillHist("rec", objTypeStr, "SumEt", theSumEt);
+	      this->fillHist("rec", objTypeStr, "SumEt", theSumEt[objType]);
 	    }
 
 	} // Closes loop in reco
@@ -941,38 +927,37 @@ void HLTExoticaSubAnalysis::bookHist(DQMStore::IBooker & iBooker,
     std::string name = source + objType + variable ;
     TH1F * h = 0;
     
-#if 0
     if (variable.find("SumEt") != std::string::npos) {
-        std::string title = "Sum ET of " + sourceUpper + " " + objType;
-        const size_t nBins = _parametersTurnOn.size() - 1;
-        float * edges = new float[nBins + 1];
-        for (size_t i = 0; i < nBins + 1; i++) {
-            edges[i] = _parametersTurnOn[i];
-        }
-        h = new TH1F(name.c_str(), title.c_str(), nBins, edges);
-        delete[] edges;
+      std::string title = "Sum ET of " + sourceUpper + " " + objType;
+      const size_t nBins = _parametersTurnOn.size() - 1;
+      float * edges = new float[nBins + 1];
+      for (size_t i = 0; i < nBins + 1; i++) {
+	edges[i] = _parametersTurnOn[i];
+      }
+      h = new TH1F(name.c_str(), title.c_str(), nBins, edges);
+      delete[] edges;
     }
+
     else if (variable.find("MaxPt") != std::string::npos) {
-#else // Temporary commented out SumEt part
-    if (variable.find("MaxPt") != std::string::npos) {
-#endif
-        std::string desc = (variable == "MaxPt1") ? "Leading" : "Next-to-Leading";
-        std::string title = "pT of " + desc + " " + sourceUpper + " " + objType;
-        const size_t nBins = _parametersTurnOn.size() - 1;
-        float * edges = new float[nBins + 1];
-        for (size_t i = 0; i < nBins + 1; i++) {
-            edges[i] = _parametersTurnOn[i];
-        }
-        h = new TH1F(name.c_str(), title.c_str(), nBins, edges);
-        delete[] edges;
-    } else {
-        std::string symbol = (variable == "Eta") ? "#eta" : "#phi";
-        std::string title  = symbol + " of " + sourceUpper + " " + objType;
-        std::vector<double> params = (variable == "Eta") ? _parametersEta : _parametersPhi;
-        int    nBins = (int)params[0];
-        double min   = params[1];
-        double max   = params[2];
-        h = new TH1F(name.c_str(), title.c_str(), nBins, min, max);
+      std::string desc = (variable == "MaxPt1") ? "Leading" : "Next-to-Leading";
+      std::string title = "pT of " + desc + " " + sourceUpper + " " + objType;
+      const size_t nBins = _parametersTurnOn.size() - 1;
+      float * edges = new float[nBins + 1];
+      for (size_t i = 0; i < nBins + 1; i++) {
+	edges[i] = _parametersTurnOn[i];
+      }
+      h = new TH1F(name.c_str(), title.c_str(), nBins, edges);
+      delete[] edges;
+    } 
+
+    else {
+      std::string symbol = (variable == "Eta") ? "#eta" : "#phi";
+      std::string title  = symbol + " of " + sourceUpper + " " + objType;
+      std::vector<double> params = (variable == "Eta") ? _parametersEta : _parametersPhi;
+      int    nBins = (int)params[0];
+      double min   = params[1];
+      double max   = params[2];
+      h = new TH1F(name.c_str(), title.c_str(), nBins, min, max);
     }
 
     h->Sumw2();
@@ -1038,12 +1023,12 @@ void HLTExoticaSubAnalysis::initSelector(const unsigned int & objtype)
 }
 
 // Insert the HLT candidates
-void HLTExoticaSubAnalysis::insertCandidates(const unsigned int & objType, const EVTColContainer * cols, std::vector<reco::LeafCandidate> * matches, double & theSumEt)
+void HLTExoticaSubAnalysis::insertCandidates(const unsigned int & objType, const EVTColContainer * cols, std::vector<reco::LeafCandidate> * matches, std::map<int,double> & theSumEt)
 {
     
     LogDebug("ExoticaValidation") << "In HLTExoticaSubAnalysis::insertCandidates()"; 
 
-    theSumEt = 0;
+    theSumEt[objType] = -1;
     
     if (objType == EVTColContainer::MUON) {
         for (size_t i = 0; i < cols->muons->size(); i++) {
@@ -1100,7 +1085,7 @@ void HLTExoticaSubAnalysis::insertCandidates(const unsigned int & objType, const
 	    if (_recPFMETSelector->operator()(cols->pfMETs->at(i))) {
 		reco::LeafCandidate m(0, cols->pfMETs->at(i).p4(), cols->pfMETs->at(i).vertex(), objType, 0, true);
 		matches->push_back(m);
-		if(i==0) theSumEt = cols->pfMETs->at(i).sumEt();
+		if(i==0) theSumEt[objType] = cols->pfMETs->at(i).sumEt();
 	    }
         }
     } else if (objType == EVTColContainer::GENMET) {
@@ -1109,7 +1094,7 @@ void HLTExoticaSubAnalysis::insertCandidates(const unsigned int & objType, const
 	    if (_genMETSelector->operator()(cols->genMETs->at(i))) {
 		reco::LeafCandidate m(0, cols->genMETs->at(i).p4(), cols->genMETs->at(i).vertex(), objType, 0, true);
 		matches->push_back(m);
-		if(i==0) theSumEt = cols->genMETs->at(i).sumEt();
+		if(i==0) theSumEt[objType] = cols->genMETs->at(i).sumEt();
 	    }
         }
     } else if (objType == EVTColContainer::CALOMET) {
@@ -1118,7 +1103,7 @@ void HLTExoticaSubAnalysis::insertCandidates(const unsigned int & objType, const
             if (_recCaloMETSelector->operator()(cols->caloMETs->at(i))) {
                 reco::LeafCandidate m(0, cols->caloMETs->at(i).p4(), cols->caloMETs->at(i).vertex(), objType, 0, true);
                 matches->push_back(m);
-		if(i==0) theSumEt = cols->caloMETs->at(i).sumEt();
+		if(i==0) theSumEt[objType] = cols->caloMETs->at(i).sumEt();
             }
         }
     } else if (objType == EVTColContainer::L1MET) {
@@ -1127,7 +1112,7 @@ void HLTExoticaSubAnalysis::insertCandidates(const unsigned int & objType, const
             if (_l1METSelector->operator()(cols->l1METs->at(i))) {
                 reco::LeafCandidate m(0, cols->l1METs->at(i).p4(), cols->l1METs->at(i).vertex(), objType, 0, true);
                 matches->push_back(m);
-		if(i==0) theSumEt = cols->l1METs->at(i).etTotal();
+		if(i==0) theSumEt[objType] = cols->l1METs->at(i).etTotal();
             }
         }
     } else if (objType == EVTColContainer::PFTAU) {
