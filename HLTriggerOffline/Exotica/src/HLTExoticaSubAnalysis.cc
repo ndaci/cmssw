@@ -401,8 +401,8 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
       this->initSelector(it->first);
       // -- Storing the matchesReco
       this->insertCandidates(it->first, cols, &matchesReco, theSumEt);
-      if(verbose>-1) std::cout << "--- " << EVTColContainer::getTypeString(it->first) 
-			       << " sumEt=" << theSumEt[it->first] << std::endl;
+      if(verbose>2) std::cout << "--- " << EVTColContainer::getTypeString(it->first) 
+			      << " sumEt=" << theSumEt[it->first] << std::endl;
     }
 
     // std::sort(matchesReco.begin(), 
