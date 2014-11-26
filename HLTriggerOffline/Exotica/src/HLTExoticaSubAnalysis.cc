@@ -859,72 +859,72 @@ void HLTExoticaSubAnalysis::getHandlesToObjects(const edm::Event & iEvent, EVTCo
         if (it->first == EVTColContainer::MUON) {
             edm::Handle<reco::MuonCollection> theHandle;
             iEvent.getByToken(it->second, theHandle);
-            col->set(theHandle.product());
+            if (theHandle.isValid()) col->set(theHandle.product());
         } 
 	else if (it->first == EVTColContainer::MUTRK) {
             edm::Handle<reco::TrackCollection> theHandle;
             iEvent.getByToken(it->second, theHandle);
-            col->set(theHandle.product());
+            if (theHandle.isValid()) col->set(theHandle.product());
         }
 	else if (it->first == EVTColContainer::TRACK) {
             edm::Handle<reco::TrackCollection> theHandle;
             iEvent.getByToken(it->second, theHandle);
-            col->set(theHandle.product());
+            if (theHandle.isValid()) col->set(theHandle.product());
         }
 	else if (it->first == EVTColContainer::ELEC) {
             edm::Handle<reco::GsfElectronCollection> theHandle;
             iEvent.getByToken(it->second, theHandle);
-            col->set(theHandle.product());
+            if (theHandle.isValid()) col->set(theHandle.product());
         } 
 	else if (it->first == EVTColContainer::PHOTON) {
             edm::Handle<reco::PhotonCollection> theHandle;
             iEvent.getByToken(it->second, theHandle);
-            col->set(theHandle.product());
+            if (theHandle.isValid()) col->set(theHandle.product());
         } 
 	else if (it->first == EVTColContainer::MET) {
             edm::Handle<reco::METCollection> theHandle;
             iEvent.getByToken(it->second, theHandle);
-            col->set(theHandle.product());
+            if (theHandle.isValid()) col->set(theHandle.product());
         } 
 	else if (it->first == EVTColContainer::PFMET) {
 	  edm::Handle<reco::PFMETCollection> theHandle;
 	  iEvent.getByToken(it->second, theHandle);
-	  col->set(theHandle.product());
+	  if (theHandle.isValid()) col->set(theHandle.product());
         } 
 	else if (it->first == EVTColContainer::PFMHT) {
 	  edm::Handle<reco::PFMETCollection> theHandle;
 	  iEvent.getByToken(it->second, theHandle);
-	  col->setPFMHT(theHandle.product());
+	  if (theHandle.isValid()) col->setPFMHT(theHandle.product());
         } 
 	else if (it->first == EVTColContainer::GENMET) {
             edm::Handle<reco::GenMETCollection> theHandle;
             iEvent.getByToken(it->second, theHandle);
-            col->set(theHandle.product());
+            if (theHandle.isValid()) col->set(theHandle.product());
         } 
         else if (it->first == EVTColContainer::CALOMET) {
             edm::Handle<reco::CaloMETCollection> theHandle;
             iEvent.getByToken(it->second, theHandle);
-            col->set(theHandle.product());
+            if (theHandle.isValid()) col->set(theHandle.product());
         }
         else if (it->first == EVTColContainer::L1MET) {
             edm::Handle<l1extra::L1EtMissParticleCollection> theHandle;
             iEvent.getByToken(it->second, theHandle);
-            col->set(theHandle.product());
+            if (theHandle.isValid()) col->set(theHandle.product());
         }
 	else if (it->first == EVTColContainer::PFTAU) {
             edm::Handle<reco::PFTauCollection> theHandle;
             iEvent.getByToken(it->second, theHandle);
-            col->set(theHandle.product());
+            if (theHandle.isValid()) col->set(theHandle.product());
         } 
 	else if (it->first == EVTColContainer::PFJET) {
             edm::Handle<reco::PFJetCollection> theHandle;
             iEvent.getByToken(it->second, theHandle);
-            col->set(theHandle.product());
+            if (theHandle.isValid()) col->set(theHandle.product());
         }
 	else if (it->first == EVTColContainer::CALOJET) {
             edm::Handle<reco::CaloJetCollection> theHandle;
             iEvent.getByToken(it->second, theHandle);
-            col->set(theHandle.product());
+            if (theHandle.isValid()) col->set(theHandle.product());
         }
 	else {
             edm::LogError("ExoticaValidation") << "HLTExoticaSubAnalysis::getHandlesToObjects "
