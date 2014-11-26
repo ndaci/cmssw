@@ -159,6 +159,7 @@ private:
     StringCutObjectSelector<reco::GsfElectron> * _recElecSelector;
     StringCutObjectSelector<reco::MET>         * _recMETSelector;
     StringCutObjectSelector<reco::PFMET>       * _recPFMETSelector;
+    StringCutObjectSelector<reco::PFMET>       * _recPFMHTSelector;
     StringCutObjectSelector<reco::GenMET>      * _genMETSelector;
     StringCutObjectSelector<reco::CaloMET>     * _recCaloMETSelector;
     StringCutObjectSelector<l1extra::L1EtMissParticle> * _l1METSelector;
