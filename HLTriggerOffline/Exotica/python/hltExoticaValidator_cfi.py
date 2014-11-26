@@ -17,9 +17,9 @@ import FWCore.ParameterSet.Config as cms
 from HLTriggerOffline.Exotica.analyses.hltExoticaHighPtDimuon_cff      import HighPtDimuonPSet
 from HLTriggerOffline.Exotica.analyses.hltExoticaHighPtDielectron_cff  import HighPtDielectronPSet
 from HLTriggerOffline.Exotica.analyses.hltExoticaLowPtDimuon_cff       import LowPtDimuonPSet
-#from HLTriggerOffline.Exotica.analyses.hltExoticaLowPtDielectron_cff   import LowPtDielectronPSet
+from HLTriggerOffline.Exotica.analyses.hltExoticaLowPtDielectron_cff   import LowPtDielectronPSet
 from HLTriggerOffline.Exotica.analyses.hltExoticaHighPtElectron_cff    import HighPtElectronPSet
-from HLTriggerOffline.Exotica.analyses.hltExoticaLowPtElectron_cff     import LowPtElectronPSet
+#from HLTriggerOffline.Exotica.analyses.hltExoticaLowPtElectron_cff     import LowPtElectronPSet
 from HLTriggerOffline.Exotica.analyses.hltExoticaHighPtPhoton_cff      import HighPtPhotonPSet
 from HLTriggerOffline.Exotica.analyses.hltExoticaDiPhoton_cff          import DiPhotonPSet
 from HLTriggerOffline.Exotica.analyses.hltExoticaHT_cff                import HTPSet
@@ -45,28 +45,29 @@ hltExoticaValidator = cms.EDAnalyzer(
     # -- The name of the analysis. This is the name that
     # appears in Run summary/Exotica/ANALYSIS_NAME
 
-    analysis       = cms.vstring("HighPtDimuon",
-                                 "HighPtDielectron",
-                                 "LowPtDimuon",
-                                 #"LowPtDielectron",
-                                 "HighPtElectron",
-                                 "LowPtElectron",
-                                 "HighPtPhoton",
-                                 "DiPhoton",
-                                 "JetNoBptx",
-                                 "MuonNoBptx",
-                                 "HT",
-                                 "DisplacedMuEG",
-                                 "DisplacedDimuon",
-                                 "DisplacedL2Dimuon",
-                                 "PureMET",
-                                 "METplusTrack",
-                                 "Monojet",
-                                 "MonojetBackup",
-                                 "DisplacedDimuonDijet",
-                                 "EleMu",
-                                 "HTDisplacedJets"
-                                 ),
+    analysis       = cms.vstring(
+        "HighPtDimuon",
+        "HighPtDielectron",
+        "LowPtDimuon",
+        "LowPtDielectron",
+        "HighPtElectron",
+        #"LowPtElectron",
+        "HighPtPhoton",
+        "DiPhoton",
+        "JetNoBptx",
+        "MuonNoBptx",
+        "HT",
+        "DisplacedMuEG",
+        "DisplacedDimuon",
+        "DisplacedL2Dimuon",
+        "PureMET",
+        "METplusTrack",
+        "Monojet",
+        "MonojetBackup",
+        "DisplacedDimuonDijet",
+        "EleMu",
+        "HTDisplacedJets"
+        ),
     
     # -- The instance name of the reco::GenParticles collection
     genParticleLabel = cms.string("genParticles"),
@@ -141,6 +142,9 @@ hltExoticaValidator = cms.EDAnalyzer(
    
     PFMET_genCut    = cms.string("pt > 75"),
     PFMET_recCut    = cms.string("pt > 75"),  
+
+    PFMHT_genCut    = cms.string("pt > 75"),
+    PFMHT_recCut    = cms.string("pt > 75"),  
    
     GenMET_genCut   = cms.string("pt > 75"),
     GenMET_recCut   = cms.string("pt > 75"),  
@@ -175,9 +179,9 @@ hltExoticaValidator = cms.EDAnalyzer(
     HighPtDimuon     = HighPtDimuonPSet,
     HighPtDielectron = HighPtDielectronPSet,
     LowPtDimuon      = LowPtDimuonPSet,
-    #LowPtDielectron  = LowPtDielectronPSet,
+    LowPtDielectron  = LowPtDielectronPSet,
     HighPtElectron   = HighPtElectronPSet,
-    LowPtElectron    = LowPtElectronPSet,
+    #LowPtElectron    = LowPtElectronPSet,
     HighPtPhoton     = HighPtPhotonPSet,                                 
     DiPhoton         = DiPhotonPSet,                                 
     JetNoBptx        = JetNoBptxPSet,
