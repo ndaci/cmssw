@@ -18,8 +18,8 @@ MonojetPSet = cms.PSet(
 
     recCaloJetLabel  = cms.InputTag("ak4CaloJets"),
     recPFJetLabel    = cms.InputTag("ak4PFJets"),
-    recPFMETLabel    = cms.InputTag("pfMet"),
-    recPFMHTLabel    = cms.InputTag("recoExoticaValidationHT"),
+    recPFMETLabel    = cms.InputTag("recoExoticaValidationMETNoMu"),
+    recPFMHTLabel    = cms.InputTag("recoExoticaValidationMHTNoMu"),
 
     # -- Analysis specific cuts
     minCandidates = cms.uint32(1),
