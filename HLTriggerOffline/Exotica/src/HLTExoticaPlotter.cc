@@ -57,11 +57,11 @@ void HLTExoticaPlotter::plotterBookHistos(DQMStore::IBooker & iBooker,
         for (size_t i = 0; i < sources.size(); i++) {
             std::string source = sources[i];
 
-	    if ( !TString(objTypeStr).Contains("MET") || source!="gen" ) {
+	    if ( !( TString(objTypeStr).Contains("MET") || TString(objTypeStr).Contains("MHT") ) || source!="gen" ) {
 	      bookHist(iBooker, source, objTypeStr, "MaxPt1");
 	    }
 	  
-            if ( ! TString(objTypeStr).Contains("MET") ) {
+            if ( !( TString(objTypeStr).Contains("MET") || TString(objTypeStr).Contains("MHT") ) ) {
 	      bookHist(iBooker, source, objTypeStr, "Eta");
 	      bookHist(iBooker, source, objTypeStr, "Phi");
 	      bookHist(iBooker, source, objTypeStr, "MaxPt2");
@@ -108,7 +108,7 @@ void HLTExoticaPlotter::analyze(const bool & isPassTrigger,
         float eta =   matches[j].eta();
         float phi =   matches[j].phi();
 
-	if ( ! TString(objTypeStr).Contains("MET") ) {
+	if ( !( TString(objTypeStr).Contains("MET") || TString(objTypeStr).Contains("MHT") ) ) {
           this->fillHist(isPassTrigger, source, objTypeStr, "Eta", eta);
           this->fillHist(isPassTrigger, source, objTypeStr, "Phi", phi);
 	}
@@ -119,7 +119,7 @@ void HLTExoticaPlotter::analyze(const bool & isPassTrigger,
 	}
 
         if (countobjects[objType] == 0) {
-	  if ( !TString(objTypeStr).Contains("MET") || source!="gen" ) {
+	  if ( !( TString(objTypeStr).Contains("MET") || TString(objTypeStr).Contains("MHT") ) || source!="gen" ) {
             this->fillHist(isPassTrigger, source, objTypeStr, "MaxPt1", pt);
 	  }
 	  // Filled the high pt ...
@@ -127,7 +127,7 @@ void HLTExoticaPlotter::analyze(const bool & isPassTrigger,
 	  ++counttotal;
         } 
 	else if (countobjects[objType] == 1) {
-	  if( ! TString(objTypeStr).Contains("MET") ) {
+	  if( !( TString(objTypeStr).Contains("MET") || TString(objTypeStr).Contains("MHT") ) ) {
             this->fillHist(isPassTrigger, source, objTypeStr, "MaxPt2", pt);
 	  }
 	  // Filled the second high pt ...

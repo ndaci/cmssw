@@ -194,16 +194,16 @@ void HLTExoticaSubAnalysis::subAnalysisBookHistos(DQMStore::IBooker &iBooker,
         for (size_t i = 0; i < sources.size(); i++) {
 	  std::string source = sources[i];
 
-	  if ( !TString(objStr).Contains("MET") || source!="gen" ) {
+	  if ( !( TString(objStr).Contains("MET") || TString(objStr).Contains("MHT") ) || source!="gen" ) {
 	    bookHist(iBooker, source, objStr, "MaxPt1");
 	  }
 
-	  if ( ! TString(objStr).Contains("MET") ) { 
+	  if ( !( TString(objStr).Contains("MET") || TString(objStr).Contains("MHT") ) ) { 
 	    bookHist(iBooker, source, objStr, "Eta");
 	    bookHist(iBooker, source, objStr, "Phi");
 	    bookHist(iBooker, source, objStr, "MaxPt2");
 	  }
-	  else { // MET case
+	  else { // MET or MHT case
 	    if (source == "gen") continue; // gen {any kind of}MET doesn't make sense. 
 	    else bookHist(iBooker, source, objStr, "SumEt");
 	  }
@@ -394,7 +394,7 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 
     // --- same for RECO objects
     // Extraction of the objects candidates
-    if(verbose>-1) std::cout << "-- enter loop over recLabels" << std::endl;
+    if(verbose>0) std::cout << "-- enter loop over recLabels" << std::endl;
     for (std::map<unsigned int, edm::InputTag>::iterator it = _recLabels.begin();
          it != _recLabels.end(); ++it) {
       //std::cout << "Filling RECO \"matchesReco\" vector for particle kind it->first = "
@@ -404,7 +404,7 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
       this->initSelector(it->first);
       // -- Storing the matchesReco
       this->insertCandidates(it->first, cols, &matchesReco, theSumEt);
-      if(verbose>-1) std::cout << "--- " << EVTColContainer::getTypeString(it->first) 
+      if(verbose>0) std::cout << "--- " << EVTColContainer::getTypeString(it->first) 
 			      << " sumEt=" << theSumEt[it->first] << std::endl;
     }
 
@@ -456,7 +456,7 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 	//std::cout << "(4) Gonna call with " << objType << std::endl;
 	const std::string objTypeStr = EVTColContainer::getTypeString(objType);
 
-	if (TString(objTypeStr).Contains("MET")) { // genAnyMET doesn't make sense. 
+	if ( TString(objTypeStr).Contains("MET") || TString(objTypeStr).Contains("MHT") ) { // genAnyMET doesn't make sense. 
 	  size_t max_size = matchesGen.size();
 	  for ( size_t jj = j; jj < max_size; jj++ ) {
 	    matchesGen.erase(matchesGen.end());
@@ -575,7 +575,7 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 		++counttotal;
 	    } 
 	    else if (countobjects[objType] == 1) {
-	      if( ! TString(objTypeStr).Contains("MET") ) {
+	      if( ! ( TString(objTypeStr).Contains("MET") || TString(objTypeStr).Contains("MHT") ) ) {
 		this->fillHist("rec", objTypeStr, "MaxPt2", pt);
 	      }
 	      ++(countobjects[objType]);
@@ -595,7 +595,7 @@ void HLTExoticaSubAnalysis::analyze(const edm::Event & iEvent, const edm::EventS
 	    float eta = matchesReco[j].eta();
 	    float phi = matchesReco[j].phi();
 	
-            if ( ! TString(objTypeStr).Contains("MET") ) { 
+            if ( !( TString(objTypeStr).Contains("MET") || TString(objTypeStr).Contains("MHT") ) ) { 
 	      this->fillHist("rec", objTypeStr, "Eta", eta);
 	      this->fillHist("rec", objTypeStr, "Phi", phi);
             }
