@@ -122,6 +122,10 @@ hltExoticaPostDiPhoton = hltExoticaPostProcessor.clone()
 hltExoticaPostDiPhoton.subDirs = ['HLT/Exotica/DiPhoton']
 hltExoticaPostDiPhoton.efficiencyProfile = efficiency_strings
 
+hltExoticaPostSingleMuon = hltExoticaPostProcessor.clone()
+hltExoticaPostSingleMuon.subDirs = ['HLT/Exotica/SingleMuon']
+hltExoticaPostSingleMuon.efficiencyProfile = efficiency_strings
+
 hltExoticaPostHT = hltExoticaPostProcessor.clone()
 hltExoticaPostHT.subDirs = ['HLT/Exotica/HT']
 hltExoticaPostHT.efficiencyProfile = efficiency_strings
@@ -171,6 +175,10 @@ hltExoticaEleMu = hltExoticaPostProcessor.clone()
 hltExoticaEleMu.subDirs = ['HLT/Exotica/EleMu']
 hltExoticaEleMu.efficiencyProfile = efficiency_strings
 
+hltExoticaPhotonMET = hltExoticaPostProcessor.clone()
+hltExoticaPhotonMET.subDirs = ['HLT/Exotica/PhotonMET']
+hltExoticaPhotonMET.efficiencyProfile = efficiency_strings
+
 hltExoticaHTDisplacedJets = hltExoticaPostProcessor.clone()
 hltExoticaHTDisplacedJets.subDirs = ['HLT/Exotica/HTDisplacedJets']
 hltExoticaHTDisplacedJets.efficiencyProfile = efficiency_strings
@@ -184,6 +192,7 @@ hltExoticaPostProcessors = cms.Sequence(
     # Single Lepton paths
     hltExoticaPostHighPtElectron +
     hltExoticaPostLowPtElectron +
+    hltExoticaPostSingleMuon +
     # Photon paths
     hltExoticaPostHighPtPhoton +
     hltExoticaPostDiPhoton +
@@ -203,5 +212,6 @@ hltExoticaPostProcessors = cms.Sequence(
     hltExoticaPostMETplusTrack +
     hltExoticaDisplacedDimuonDijet +
     hltExoticaEleMu +
+    hltExoticaPhotonMET +
     hltExoticaHTDisplacedJets
     )

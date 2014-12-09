@@ -35,6 +35,8 @@ from HLTriggerOffline.Exotica.analyses.hltExoticaMonojetBackup_cff     import Mo
 from HLTriggerOffline.Exotica.analyses.hltExoticaDisplacedDimuonDijet_cff import DisplacedDimuonDijetPSet
 from HLTriggerOffline.Exotica.analyses.hltExoticaEleMu_cff             import EleMuPSet
 from HLTriggerOffline.Exotica.analyses.hltExoticaHTDisplacedJets_cff   import HTDisplacedJetsPSet
+from HLTriggerOffline.Exotica.analyses.hltExoticaPhotonMET             import PhotonMETPSet
+from HLTriggerOffline.Exotica.analyses.hltExoticaSingleMuon            import SingleMuonPSet
 
 hltExoticaValidator = cms.EDAnalyzer(
 
@@ -53,6 +55,7 @@ hltExoticaValidator = cms.EDAnalyzer(
                                  "LowPtElectron",
                                  "HighPtPhoton",
                                  "DiPhoton",
+                                 "SingleMuon",
                                  "JetNoBptx",
                                  "MuonNoBptx",
                                  "HT",
@@ -65,6 +68,7 @@ hltExoticaValidator = cms.EDAnalyzer(
                                  "MonojetBackup",
                                  "DisplacedDimuonDijet",
                                  "EleMu",
+                                 "PhotonMET",
                                  "HTDisplacedJets"
                                  ),
     
@@ -180,6 +184,7 @@ hltExoticaValidator = cms.EDAnalyzer(
     LowPtElectron    = LowPtElectronPSet,
     HighPtPhoton     = HighPtPhotonPSet,                                 
     DiPhoton         = DiPhotonPSet,                                 
+    SingleMuon       = SingleMuonPSet,
     JetNoBptx        = JetNoBptxPSet,
     MuonNoBptx       = MuonNoBptxPSet,
     DisplacedMuEG    = DisplacedMuEGPSet,
@@ -192,5 +197,6 @@ hltExoticaValidator = cms.EDAnalyzer(
     HT               = HTPSet,
     DisplacedDimuonDijet = DisplacedDimuonDijetPSet,
     EleMu            = EleMuPSet,
+    PhotonMET        = PhotonMETPSet,
     HTDisplacedJets  = HTDisplacedJetsPSet 
 )
