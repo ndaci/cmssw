@@ -6,6 +6,41 @@ import os,time
 import shutil
 from subprocess import Popen 
 from os.path import exists, basename, join
+from os import getenv
+from datetime import datetime
+from hashlib import sha1
+import urllib2, base64, json
+
+# This is used to report results of the runTheMatrix to the elasticsearch
+# instance used for IBs. This way we can track progress even if the logs are
+# not available.
+def esReportWorkflow(**kwds):
+  # Silently exit if we cannot contact elasticsearch
+  es_hostname = getenv("ES_HOSTNAME")
+  es_auth = getenv("ES_AUTH")
+  if not es_hostname and not es_auth:
+    return
+  payload = kwds
+  sha1_id = sha1(kwds["release"] + kwds["architecture"] +  kwds["workflow"] + str(kwds["step"])).hexdigest()
+  d = datetime.now()
+  if "_201" in kwds["release"]:
+    datepart = "201" + kwds["release"].split("_201")[1]
+    d = datetime.strptime(datepart, "%Y-%m-%d-%H00")
+    payload["release_queque"] = kwds["release"].split("_201")[0]
+  payload["release_date"] = d.strftime("%Y-%m-%d-%H00")
+  url = "https://%s/ib-matrix.%s/runTheMatrix-data/%s" % (es_hostname,
+                                                          d.strftime("%Y.%m"),
+                                                          sha1_id)
+  request = urllib2.Request(url)
+  if es_auth:
+    base64string = base64.encodestring(es_auth).replace('\n', '')
+    request.add_header("Authorization", "Basic %s" % base64string)
+  request.get_method = lambda: 'PUT'
+  data = json.dumps(payload)
+  try:
+    result = urllib2.urlopen(request, data=data)
+  except urllib2.HTTPError, e:
+    print e
 
 class WorkFlowRunner(Thread):
     def __init__(self, wf, noRun=False,dryRun=False,cafVeto=True,dasOptions="",jobReport=False):
@@ -59,6 +94,7 @@ class WorkFlowRunner(Thread):
 
         preamble = 'cd '+self.wfDir+'; '
        
+        realstarttime = datetime.now()
         startime='date %s' %time.asctime()
 
         # check where we are running:
@@ -149,6 +185,14 @@ class WorkFlowRunner(Thread):
                 if self.jobReport:
                   cmd += ' --suffix "-j JobReport%s.xml " ' % istep
                 cmd+=closeCmd(istep,self.wf.nameId)            
+                esReportWorkflow(workflow=self.wf.nameId,
+                                 release=getenv("CMSSW_VERSION"),
+                                 architecture=getenv("SCRAM_ARCH"),
+                                 step=istep,
+                                 command=cmd,
+                                 status="STARTED",
+                                 start_time=realstarttime.isoformat(),
+                                 workflow_id=self.wf.numId)
                 retStep = self.doCmd(cmd)
 
 
@@ -176,6 +220,16 @@ class WorkFlowRunner(Thread):
                 self.nfail.append(0)
                 self.stat.append('PASSED')
 
+            esReportWorkflow(workflow=self.wf.nameId,
+                             release=getenv("CMSSW_VERSION"),
+                             architecture=getenv("SCRAM_ARCH"), 
+                             step=istep,
+                             command=cmd,
+                             status=self.stat[-1],
+                             start_time=realstarttime.isoformat(),
+                             end_time=datetime.now().isoformat(),
+                             delta_time=(datetime.now() - realstarttime).seconds,
+                             workflow_id=self.wf.numId)
 
         os.chdir(startDir)
 
