@@ -9,7 +9,6 @@
 #include "DQMServices/ClientConfig/interface/DQMGenericClient.h"
 
 #include "DQMServices/ClientConfig/interface/FitSlicesYTool.h"
-#include "DQMServices/Core/interface/MonitorElement.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
@@ -358,12 +357,25 @@ void DQMGenericClient::dqmEndJob(DQMStore::IBooker & ibooker, DQMStore::IGetter 
       iSubDir != subDirSet.end(); ++iSubDir) {
     const string& dirName = *iSubDir;
 
+    // keep data for global efficiency
+    // will make histogram later because we don't know how many bins we need
+    // automatic bin-extention (rebin) often makes unecessary bins. 
+    HistDataBuffer hdbuf; 
     for ( vector<EfficOption>::const_iterator efficOption = efficOptions_.begin();
           efficOption != efficOptions_.end(); ++efficOption )
     {
       computeEfficiency(ibooker, igetter, dirName, efficOption->name, efficOption->title, 
                         efficOption->numerator, efficOption->denominator,
-                        efficOption->type, efficOption->isProfile);
+                        hdbuf, efficOption->type, efficOption->isProfile);
+    }
+    
+    // Make a global efficiency histobram
+    const int nBins = int(hdbuf.getEntries());
+    if (nBins) { 
+      ibooker.setCurrentFolder(dirName);
+      ME* globalEfficME = igetter.get(dirName+"/globalEfficiencies");
+      globalEfficME = ibooker.book1D("globalEfficiencies", "Global efficiencies", nBins, 0, nBins);
+      hdbuf.fillHistogramTo(globalEfficME);
     }
 
     for ( vector<ResolOption>::const_iterator resolOption = resolOptions_.begin();
@@ -394,7 +406,7 @@ void DQMGenericClient::dqmEndJob(DQMStore::IBooker & ibooker, DQMStore::IGetter 
 }
 
 void DQMGenericClient::computeEfficiency (DQMStore::IBooker& ibooker, DQMStore::IGetter& igetter, const string& startDir, const string& efficMEName,
-					 const string& efficMETitle, const string& recoMEName, const string& simMEName, const int type, const bool makeProfile)
+					 const string& efficMETitle, const string& recoMEName, const string& simMEName, HistDataBuffer& hdbuf , const int type, const bool makeProfile)
 {
   if ( ! igetter.dirExists(startDir) ) {
     if ( verbose_ >= 2 || (verbose_ == 1 && !isWildcardUsed_) ) {
@@ -572,30 +584,13 @@ void DQMGenericClient::computeEfficiency (DQMStore::IBooker& ibooker, DQMStore::
   }
 
   // Global efficiency
-  ME* globalEfficME = igetter.get(efficDir+"/globalEfficiencies");
-  if ( !globalEfficME ) globalEfficME = ibooker.book1D("globalEfficiencies", "Global efficiencies", 1, 0, 1);
-  if ( !globalEfficME ) {
-    LogInfo("DQMGenericClient") << "computeEfficiency() : "
-                              << "Cannot book globalEffic-ME from the DQM\n";
-    return;
-  }
-  TH1F* hGlobalEffic = globalEfficME->getTH1F();
-  if ( !hGlobalEffic ) {
-    LogInfo("DQMGenericClient") << "computeEfficiency() : "
-                              << "Cannot create TH1F from ME, globalEfficME\n";
-    return;
-  }
-
   const float nSimAll = hSim->GetEntries();
   const float nRecoAll = hReco->GetEntries();
   float efficAll=0; 
   if ( type == 1 ) efficAll = nSimAll ? nRecoAll/nSimAll : 0;
   else if ( type == 2 ) efficAll = nSimAll ? 1-nRecoAll/nSimAll : 0;
   const float errorAll = nSimAll && efficAll < 1 ? sqrt(efficAll*(1-efficAll)/nSimAll) : 0;
-
-  const int iBin = hGlobalEffic->Fill(newEfficMEName.c_str(), 0);
-  hGlobalEffic->SetBinContent(iBin, efficAll);
-  hGlobalEffic->SetBinError(iBin, errorAll);
+  hdbuf.store(newEfficMEName,efficAll,errorAll);
 }
 
 void DQMGenericClient::computeResolution(DQMStore::IBooker& ibooker, DQMStore::IGetter& igetter, const string& startDir, const string& namePrefix, const string& titlePrefix,

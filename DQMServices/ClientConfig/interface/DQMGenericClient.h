@@ -12,6 +12,7 @@
 
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "DQMServices/Core/interface/DQMEDHarvester.h"
+#include "DQMServices/Core/interface/MonitorElement.h"
 #include <set>
 #include <string>
 #include <vector>
@@ -23,8 +24,6 @@
 #include <TGraphAsymmErrors.h>
 #endif
 
-class MonitorElement;
-
 class DQMGenericClient : public DQMEDHarvester
 {
  public:
@@ -32,6 +31,36 @@ class DQMGenericClient : public DQMEDHarvester
   ~DQMGenericClient() {};
 
   void dqmEndJob(DQMStore::IBooker &, DQMStore::IGetter &) override;
+
+  class HistDataBuffer {
+
+    public :
+
+      void store(std::string name, float mean, float error) {
+        fnames.push_back(name);
+        fmeans.push_back(mean);
+        ferrors.push_back(error);
+      }
+
+      void fillHistogramTo(MonitorElement* ME) {
+        for ( unsigned int i = 0; i < getEntries(); i++ ) {
+          TH1F* h = ME->getTH1F();
+          const int iBin = h->Fill(fnames.at(i).c_str(), 0);
+          h->SetBinContent(iBin, fmeans.at(i));
+          h->SetBinError(iBin, ferrors.at(i));
+        }
+      }
+
+      unsigned int getEntries() {
+        if (fnames.size()==fmeans.size() && fnames.size() == ferrors.size()) return fnames.size();
+        else return 0; // something wrong
+      }
+
+    private :
+      std::vector<std::string> fnames;
+      std::vector<float>       fmeans;
+      std::vector<float>       ferrors;  
+  };
 
   struct EfficOption
   {
@@ -70,6 +99,7 @@ class DQMGenericClient : public DQMEDHarvester
                          const std::string& efficMETitle,
                          const std::string& recoMEName, 
                          const std::string& simMEName, 
+                         HistDataBuffer& hdbuf,
                          const int type=1,
                          const bool makeProfile = false);
   void computeResolution(DQMStore::IBooker& ibooker,
