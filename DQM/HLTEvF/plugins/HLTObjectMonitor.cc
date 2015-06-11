@@ -45,11 +45,14 @@
 #include "DataFormats/METReco/interface/MET.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
 #include "DataFormats/BTauReco/interface/JetTag.h"
+//#include "HLTrigger/JetMET/interface/HLTRHemisphere.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidateFwd.h"
 #include "DataFormats/Math/interface/deltaR.h"
-#include "DataFormats/JetReco/interface/PFJet.h"
-#include "DataFormats/JetReco/interface/CaloJet.h"
 
+
+// #include "DataFormats/SiPixelCluster/interface/SiPixelCluster.h"
+// #include "DataFormats/SiStripCluster/interface/SiStripCluster.h"
+// #include "CommonTools/RecoAlgos/interface/TrackSelector.h"
 
 #include "DQMServices/Core/interface/DQMStore.h"
 #include "DQMServices/Core/interface/MonitorElement.h"
@@ -87,7 +90,8 @@ class HLTObjectMonitor : public DQMEDAnalyzer {
       //virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
       //virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
 
-  double dxyFinder(double, double, edm::Handle<reco::RecoChargedCandidateCollection>, edm::Handle<reco::BeamSpot>);
+  void fillPlots(int, string, edm::Handle<trigger::TriggerEvent>, edm::Handle<reco::RecoChargedCandidateCollection>, edm::Handle<reco::BeamSpot> );
+  double dxyFinder(double, double, edm::Handle<reco::RecoChargedCandidateCollection>, edm::Handle<reco::BeamSpot> );
   double get_wall_time(void);
       // ----------member data ---------------------------
 
@@ -108,17 +112,24 @@ class HLTObjectMonitor : public DQMEDAnalyzer {
   edm::EDGetTokenT<trigger::TriggerEvent> aodTriggerToken_;
   edm::EDGetTokenT<LumiScalersCollection> lumiScalersToken_;
   edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;  
+  edm::EDGetTokenT<vector<reco::MET>> metToken_;  
+  //edm::EDGetTokenT<vector<reco::RecoChargedCandidate>> chargedCandToken_;  
   edm::EDGetTokenT<reco::RecoChargedCandidateCollection> chargedCandToken_;
   edm::EDGetTokenT<reco::JetTagCollection> csvCaloTagsToken_;
   edm::EDGetTokenT<reco::JetTagCollection> csvPfTagsToken_;
-  edm::EDGetTokenT<vector<reco::CaloJet>> csvCaloJetsToken_;
-  edm::EDGetTokenT<vector<reco::PFJet>> csvPfJetsToken_;
+  edm::EDGetTokenT<vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>>>> rHemisphereToken_;
   
 
+  // edm::EDGetTokenT<edm::AssociationVector<edm::RefToBaseProd<reco::Jet>,vector<float>,edm::RefToBase<reco::Jet>,unsigned int,edm::helper::AssociationIdenticalKeyReference>> csvCaloToken_;  
+  // edm::EDGetTokenT<edm::AssociationVector<edm::RefToBaseProd<reco::Jet>,vector<float>,edm::RefToBase<reco::Jet>,unsigned int,edm::helper::AssociationIdenticalKeyReference>> csvPfToken_;  
+  
+  // edm::EDGetTokenT<edmNew::DetSetVector<SiPixelCluster>> siPixelClusterToken_;
+  // edm::EDGetTokenT<edmNew::DetSetVector<SiStripCluster>> siStripClusterToken_;
+  // edm::EDGetTokenT<TrackingRecHitCollection> trackingRecHitsToken_;  
+  // edm::EDGetTokenT<reco::TrackExtraCollection> trackExtraToken_;  
+  // edm::EDGetTokenT<reco::TrackCollection> trackToken_;  
 
   //declare params
-  edm::ParameterSet rsq_TH1;
-  edm::ParameterSet mr_TH1;
   edm::ParameterSet alphaT_TH1;
   edm::ParameterSet photonPt_TH1;
   edm::ParameterSet photonEta_TH1;
@@ -127,7 +138,11 @@ class HLTObjectMonitor : public DQMEDAnalyzer {
   edm::ParameterSet muonEta_TH1;
   edm::ParameterSet muonPhi_TH1;
   edm::ParameterSet l2muonPt_TH1;
+  edm::ParameterSet l2muonEta_TH1;
+  edm::ParameterSet l2muonPhi_TH1;
   edm::ParameterSet l2NoBPTXmuonPt_TH1;
+  edm::ParameterSet l2NoBPTXmuonEta_TH1;
+  edm::ParameterSet l2NoBPTXmuonPhi_TH1;
   edm::ParameterSet electronPt_TH1;
   edm::ParameterSet electronEta_TH1;
   edm::ParameterSet electronPhi_TH1;
@@ -144,16 +159,12 @@ class HLTObjectMonitor : public DQMEDAnalyzer {
   edm::ParameterSet pfHtPt_TH1;
   edm::ParameterSet bJetPhi_TH1;
   edm::ParameterSet bJetEta_TH1;
-  edm::ParameterSet bJetCSVCalo_TH1;
-  edm::ParameterSet bJetCSVPF_TH1;
   edm::ParameterSet diMuonMass_TH1;
   edm::ParameterSet diElecMass_TH1;
   edm::ParameterSet muonDxy_TH1;
 
-  string processName_;
 
   //setup path names
-  string razor_pathName;
   string alphaT_pathName;
   string photonPlots_pathName;
   string muonPlots_pathName;
@@ -169,17 +180,14 @@ class HLTObjectMonitor : public DQMEDAnalyzer {
   string pfHtPt_pathName;
   string bJetPlots_pathName;
   string bJetPlots_pathNameOR;
-  string bJetPlots_pathNameCalo;
-  string bJetPlots_pathNamePF;
   string jetAK8Plots_pathName;
   string diMuonMass_pathName;
   string diMuonMass_pathNameOR;
   string diElecMass_pathName;
   string muonDxyPlots_pathName;
 
+
   //declare all MEs
-  MonitorElement * rsq_;
-  MonitorElement * mr_;
   MonitorElement * alphaT_;
   MonitorElement * photonPt_;
   MonitorElement * photonEta_;
@@ -188,7 +196,11 @@ class HLTObjectMonitor : public DQMEDAnalyzer {
   MonitorElement * muonEta_;
   MonitorElement * muonPhi_;
   MonitorElement * l2muonPt_;
+  MonitorElement * l2muonEta_;
+  MonitorElement * l2muonPhi_;
   MonitorElement * l2NoBPTXmuonPt_;
+  MonitorElement * l2NoBPTXmuonEta_;
+  MonitorElement * l2NoBPTXmuonPhi_;
   MonitorElement * electronPt_;
   MonitorElement * electronEta_;
   MonitorElement * electronPhi_;
@@ -205,8 +217,6 @@ class HLTObjectMonitor : public DQMEDAnalyzer {
   MonitorElement * pfHtPt_;
   MonitorElement * bJetPhi_;
   MonitorElement * bJetEta_;
-  MonitorElement * bJetCSVCalo_;
-  MonitorElement * bJetCSVPF_;
   MonitorElement * diMuonMass_;
   MonitorElement * diElecMass_;
   MonitorElement * muonDxy_;
@@ -238,10 +248,6 @@ HLTObjectMonitor::HLTObjectMonitor(const edm::ParameterSet& iConfig)
 
 
   //parse params
-  processName_ = iConfig.getParameter<string>("processName");
-
-  rsq_TH1 = iConfig.getParameter<edm::ParameterSet> ("rsq");
-  mr_TH1 = iConfig.getParameter<edm::ParameterSet> ("mr");
   alphaT_TH1 = iConfig.getParameter<edm::ParameterSet> ("alphaT");
   photonPt_TH1 = iConfig.getParameter<edm::ParameterSet>("photonPt");
   photonEta_TH1 = iConfig.getParameter<edm::ParameterSet>("photonEta");
@@ -250,7 +256,11 @@ HLTObjectMonitor::HLTObjectMonitor(const edm::ParameterSet& iConfig)
   muonEta_TH1 = iConfig.getParameter<edm::ParameterSet>("muonEta");
   muonPhi_TH1 = iConfig.getParameter<edm::ParameterSet>("muonPhi");
   l2muonPt_TH1 = iConfig.getParameter<edm::ParameterSet>("l2muonPt");
+  l2muonEta_TH1 = iConfig.getParameter<edm::ParameterSet>("l2muonEta");
+  l2muonPhi_TH1 = iConfig.getParameter<edm::ParameterSet>("l2muonPhi");
   l2NoBPTXmuonPt_TH1 = iConfig.getParameter<edm::ParameterSet>("l2NoBPTXmuonPt");
+  l2NoBPTXmuonEta_TH1 = iConfig.getParameter<edm::ParameterSet>("l2NoBPTXmuonEta");
+  l2NoBPTXmuonPhi_TH1 = iConfig.getParameter<edm::ParameterSet>("l2NoBPTXmuonPhi");
   electronPt_TH1 = iConfig.getParameter<edm::ParameterSet>("electronPt");
   electronEta_TH1 = iConfig.getParameter<edm::ParameterSet>("electronEta");
   electronPhi_TH1 = iConfig.getParameter<edm::ParameterSet>("electronPhi");
@@ -267,24 +277,31 @@ HLTObjectMonitor::HLTObjectMonitor(const edm::ParameterSet& iConfig)
   pfHtPt_TH1 = iConfig.getParameter<edm::ParameterSet>("pfHtPt");
   bJetPhi_TH1 = iConfig.getParameter<edm::ParameterSet>("bJetPhi");
   bJetEta_TH1 = iConfig.getParameter<edm::ParameterSet>("bJetEta");
-  bJetCSVCalo_TH1 = iConfig.getParameter<edm::ParameterSet>("bJetCSVCalo");
-  bJetCSVPF_TH1 = iConfig.getParameter<edm::ParameterSet>("bJetCSVPF");
   diMuonMass_TH1 = iConfig.getParameter<edm::ParameterSet>("diMuonMass");
   diElecMass_TH1 = iConfig.getParameter<edm::ParameterSet>("diElecMass");
   muonDxy_TH1 = iConfig.getParameter<edm::ParameterSet>("muonDxy");
-
+  
   //set Token(s) 
   //will need to change 'TEST' to 'HLT' or something else before implementation
-  triggerResultsToken_ = consumes<edm::TriggerResults>(edm::InputTag("TriggerResults","", processName_));
-  aodTriggerToken_ = consumes<trigger::TriggerEvent>(edm::InputTag("hltTriggerSummaryAOD", "", processName_));
+  triggerResultsToken_ = consumes<edm::TriggerResults>(edm::InputTag("TriggerResults","", "TEST"));
+  aodTriggerToken_ = consumes<trigger::TriggerEvent>(edm::InputTag("hltTriggerSummaryAOD", "", "TEST"));
   lumiScalersToken_ = consumes<LumiScalersCollection>(edm::InputTag("hltScalersRawToDigi","",""));
-  beamSpotToken_ = consumes<reco::BeamSpot>(edm::InputTag("hltOnlineBeamSpot","",processName_)); 
-  chargedCandToken_ = consumes<vector<reco::RecoChargedCandidate>>(edm::InputTag("hltL3NoFiltersNoVtxMuonCandidates","",processName_));  
-  csvCaloTagsToken_ = consumes<reco::JetTagCollection>(edm::InputTag("hltCombinedSecondaryVertexBJetTagsCalo","",processName_));
-  csvPfTagsToken_ = consumes<reco::JetTagCollection>(edm::InputTag("hltCombinedSecondaryVertexBJetTagsPF","",processName_));
-  csvCaloJetsToken_ = consumes<vector<reco::CaloJet>>(edm::InputTag("hltSelector8CentralJetsL1FastJet","",processName_));
-  csvPfJetsToken_ = consumes<vector<reco::PFJet>>(edm::InputTag("hltPFJetForBtag","",processName_));
+  beamSpotToken_ = consumes<reco::BeamSpot>(edm::InputTag("hltOnlineBeamSpot","","TEST")); 
+  metToken_ = consumes<vector<reco::MET>>(edm::InputTag("hltPFMETProducer","","TEST"));  
+  chargedCandToken_ = consumes<vector<reco::RecoChargedCandidate>>(edm::InputTag("hltL3NoFiltersNoVtxMuonCandidates","","TEST"));  
+  csvCaloTagsToken_ = consumes<reco::JetTagCollection>(edm::InputTag("hltCombinedSecondaryVertexBJetTagsCalo","","TEST"));
+  csvPfTagsToken_ = consumes<reco::JetTagCollection>(edm::InputTag("hltCombinedSecondaryVertexBJetTagsPF","","TEST"));
+  rHemisphereToken_ = consumes<vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>>>>(edm::InputTag("hltRHemisphere","","TEST"));
+  // csvCaloTagsToken_ = consumes<edm::AssociationVector<edm::RefToBaseProd<reco::Jet>,vector<float>,edm::RefToBase<reco::Jet>,unsigned int,edm::helper::AssociationIdenticalKeyReference>>(edm::InputTag("hltCombinedSecondaryVertexBJetTagsCalo","","TEST"));  
+  // csvPfTagsToken_ = consumes<edm::AssociationVector<edm::RefToBaseProd<reco::Jet>,vector<float>,edm::RefToBase<reco::Jet>,unsigned int,edm::helper::AssociationIdenticalKeyReference>>(edm::InputTag("hltCombinedSecondaryVertexBJetTagsPF","","TEST"));  
+  //  siPixelClusterToken_ = consumes<edmNew::DetSetVector<SiPixelCluster>>(edm::InputTag("hltSiPixelClusters","","TEST"));
+  // siStripClusterToken_ = consumes<edmNew::DetSetVector<SiStripCluster>>(edm::InputTag("hltSiStripRawToClustersFacility","","TEST"));
+  // trackingRecHitsToken_ = consumes<TrackingRecHitCollection>(edm::InputTag("hltIter2Merged","","TEST"));
+  // trackExtraToken_ = consumes<reco::TrackExtraCollection>(edm::InputTag("hltIter2Merged","","TEST"));
+  // trackToken_ = consumes<reco::TrackCollection>(edm::InputTag("hltIter2Merged","","TEST"));
 
+  // use this csvTagToken_ = consumes<reco::JetTagCollection>(InputTag("hltCombinedSecondaryVertexBJetTagsPF","","TEST")); 
+  // prob not this csvTagToken_ = consumes<edm::AssociationVector<edm::RefToBaseProd<reco::Jet>,vector<float>,edm::RefToBase<reco::Jet>,unsigned int,edm::helper::AssociationIdenticalKeyReference>>(InputTag("hltCombinedSecondaryVertexBJetTagsPF","","TEST")); 
 
 }
 
@@ -311,6 +328,7 @@ HLTObjectMonitor::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   using namespace edm;
   
    if (debugPrint) std::cout << "Inside analyze(). " << std::endl;
+   int eventNumber = iEvent.id().event();
 
    // access trigger results
    edm::Handle<edm::TriggerResults> triggerResults;
@@ -321,301 +339,53 @@ HLTObjectMonitor::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
    iEvent.getByToken(aodTriggerToken_, aodTriggerEvent);
    if (!aodTriggerEvent.isValid()) return;
 
+   edm::Handle<reco::BeamSpot> recoBeamSpot;
+   iEvent.getByToken(beamSpotToken_, recoBeamSpot);
+
+   edm::Handle<vector<reco::MET>> recoMet;
+   iEvent.getByToken(metToken_, recoMet);
+
+   edm::Handle<vector<reco::RecoChargedCandidate>> recoChargedCands;
+   iEvent.getByToken(chargedCandToken_, recoChargedCands);
+
+   edm::Handle<reco::JetTagCollection> csvCaloTags;
+   iEvent.getByToken(csvCaloTagsToken_, csvCaloTags);
+
+   edm::Handle<reco::JetTagCollection> csvPfTags;
+   iEvent.getByToken(csvPfTagsToken_, csvPfTags);
+
+   edm::Handle<vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>>>> rHemisphere;
+   iEvent.getByToken(rHemisphereToken_, rHemisphere);
+
+   // edm::Handle<edm::AssociationVector<edm::RefToBaseProd<reco::Jet>,vector<float>,edm::RefToBase<reco::Jet>,unsigned int,edm::helper::AssociationIdenticalKeyReference>> csvCaloTags;
+   // iEvent.getByToken(csvCaloToken_, csvCaloTags);
+
+   // edm::Handle<edm::AssociationVector<edm::RefToBaseProd<reco::Jet>,vector<float>,edm::RefToBase<reco::Jet>,unsigned int,edm::helper::AssociationIdenticalKeyReference>> csvPfTags;
+   // iEvent.getByToken(csvPfToken_, csvPfTags);
+
+   // edm::Handle<edmNew::DetSetVector<SiPixelCluster>> siPixelCluster;
+   // iEvent.getByToken(siPixelClusterToken_, siPixelCluster);
+
+   // edm::Handle<edmNew::DetSetVector<SiStripCluster>> siStripCluster;
+   // iEvent.getByToken(siStripClusterToken_, siStripCluster);
+
+   // edm::Handle<TrackingRecHitCollection> trackingRecHits;
+   // iEvent.getByToken(trackingRecHitsToken_, trackingRecHits);
+
+   // edm::Handle<reco::TrackExtraCollection> trackExtras;
+   // iEvent.getByToken(trackExtraToken_, trackExtras);
+
+   // edm::Handle<reco::TrackCollection> tracks;
+   // iEvent.getByToken(trackToken_, tracks);
+
    for (string & pathName : quickCollectionPaths) //loop over paths
      {
        if (triggerResults->accept(lookupIndex[pathName]) && hltConfig_.saveTags(lookupFilter[pathName]))
 	 {
-	   
-	   const TriggerObjectCollection objects = aodTriggerEvent->getObjects();
-	   edm::InputTag moduleFilter(lookupFilter[pathName],"",processName_);
-	   unsigned int moduleFilterIndex = aodTriggerEvent->filterIndex(moduleFilter);
-	   
-	   if (moduleFilterIndex+1 > aodTriggerEvent->sizeFilters()) return;
-	   const Keys &keys = aodTriggerEvent->filterKeys( moduleFilterIndex );
-	   
-	   ////////////////////////////////
-	   ///
-	   /// single-object plots
-	   ///
-	   ////////////////////////////////  
-	   
-	   //PFHT pt
-	   if (pathName == pfHtPt_pathName)
-	     {
-	       for (const auto & key : keys) pfHtPt_->Fill(objects[key].pt());
-	     }
-	   
-	   //jet pt
-	   else if (pathName == jetPt_pathName)
-	     {
-	       for (const auto & key : keys) jetPt_->Fill(objects[key].pt());
-	     }
-	   
-	   //photon pt + eta + phi (all use same path)
-	   else if (pathName == photonPlots_pathName)
-	     {
-	       for (const auto & key : keys) 
-		 {
-		   photonPt_->Fill(objects[key].pt());
-		   photonEta_->Fill(objects[key].eta());
-		   photonPhi_->Fill(objects[key].phi());
-		 }
-	     }
-	   
-	   //electron pt + eta + phi (all use same path)
-	   else if (pathName == electronPlots_pathName)
-	     {
-	       for (const auto & key : keys) 
-		 {
-		   electronPt_->Fill(objects[key].pt());
-		   electronEta_->Fill(objects[key].eta());
-		   electronPhi_->Fill(objects[key].phi());
-		 }
-	     }
-	   
-	   //muon pt + eta + phi (all use same path)
-	   else if (pathName == muonPlots_pathName)
-	     {
-	       for (const auto & key : keys) 
-		 {
-		   muonPt_->Fill(objects[key].pt());
-		   muonEta_->Fill(objects[key].eta());
-		   muonPhi_->Fill(objects[key].phi());
-		 }
-	     }
-
-	   //l2muon pt
-	   else if (pathName == l2muonPlots_pathName)
-	     {
-	       for (const auto & key : keys) 
-		 {
-		   l2muonPt_->Fill(objects[key].pt());
-		 }
-	     }
-	   
-	   //l2NoBPTXmuon pt
-	   else if (pathName == l2NoBPTXmuonPlots_pathName)
-	     {
-	       for (const auto & key : keys) 
-		 {
-		   l2NoBPTXmuonPt_->Fill(objects[key].pt());
-		 }
-	     }
-
-	   //Razor
-	   else if (pathName == razor_pathName)
-	     {
-	       double onlineMR = 0, onlineRsq = 0;
-	       for (const auto & key : keys) 
-		 {
-		   if(objects[key].id() == 0){ //the MET object containing MR and Rsq will show up with ID = 0
-		     onlineMR = objects[key].px(); //razor variables stored in dummy reco::MET objects
-		     onlineRsq = objects[key].py();
-		   }
-		   mr_->Fill(onlineMR);
-		   rsq_->Fill(onlineRsq);
-		 }
-	     }
-
-	   //alphaT
-	   else if (pathName == alphaT_pathName)
-	     {
-	       std::vector<ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double>>> alphaT_jets;
-	       for (const auto & key : keys)
-		 {
-		   ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double>> JetLVec(objects[key].pt(),objects[key].eta(),objects[key].phi(),objects[key].mass());
-		   alphaT_jets.push_back(JetLVec);
-		 }
-	       
-	       float alphaT = AlphaT(alphaT_jets,false).value(); 
-	       alphaT_->Fill(alphaT);
-	     }
-	   
-	   //tau pt
-	   else if (pathName == tauPt_pathName)
-	     {
-	       for (const auto & key : keys) tauPt_->Fill(objects[key].pt());
-	     }
-	   
-	   //caloMET pt+phi (same path)
-	   else if (pathName == caloMetPlots_pathName)
-	     {
-	       for (const auto & key : keys)
-		 {
-		   caloMetPt_->Fill(objects[key].pt());
-		   caloMetPhi_->Fill(objects[key].phi());
-		 }
-	     }
-	   
-	   //caloHT pt
-	   else if (pathName == caloHtPt_pathName)
-	     {
-	       for (const auto & key : keys) caloHtPt_->Fill(objects[key].pt());
-	     }
-	   
-	   //jetAK8 pt + mass
-	   else if (pathName == jetAK8Plots_pathName)
-	     {
-	       for (const auto & key : keys)
-		 {
-		   jetAK8Pt_->Fill(objects[key].pt());
-		   jetAK8Mass_->Fill(objects[key].mass());
-		 }
-	     }
-	   
-	   //PFMET pt + phi
-	   else if (pathName == pfMetPlots_pathName)
-	     {
-	       for (const auto & key : keys)
-		 {
-		   pfMetPt_->Fill(objects[key].pt());
-		   pfMetPhi_->Fill(objects[key].phi());
-		 }
-	     }
-	   
-	   // bjet eta + phi
-	   //else if (pathName == bJetPlots_pathName || pathName == bJetPlots_pathNameOR)
-	   else if (pathName == bJetPlots_pathNameCalo || pathName == bJetPlots_pathNamePF)
-	     {
-	       for (const auto & key : keys)
-		 {
-		   bJetEta_->Fill(objects[key].eta());
-		   bJetPhi_->Fill(objects[key].phi());
-		 }
-	     }
-	   
-	   //b-tagging CSV information
-	   if (pathName == bJetPlots_pathNamePF)
-	     {
-	       edm::Handle<reco::JetTagCollection> csvPfTags;
-	       iEvent.getByToken(csvPfTagsToken_, csvPfTags);
-	       edm::Handle<vector<reco::PFJet>> csvPfJets;
-	       iEvent.getByToken(csvPfJetsToken_, csvPfJets);
-	       
-	       if (csvPfTags.isValid() && csvPfJets.isValid())
-		 {
-		   for (auto iter = csvPfTags->begin(); iter != csvPfTags->end(); iter++) bJetCSVPF_->Fill(iter->second);
-		 }
-	     }
-	   if (pathName == bJetPlots_pathNameCalo)
-	     {
-	       edm::Handle<reco::JetTagCollection> csvCaloTags;
-	       iEvent.getByToken(csvCaloTagsToken_, csvCaloTags);
-	       edm::Handle<vector<reco::CaloJet>> csvCaloJets;
-	       iEvent.getByToken(csvCaloJetsToken_, csvCaloJets);
-	       
-
-	       if (csvCaloTags.isValid() && csvCaloJets.isValid())
-		 {
-		   for (auto iter = csvCaloTags->begin(); iter != csvCaloTags->end(); iter++) bJetCSVCalo_->Fill(iter->second);	    
-		 }
-	     }
-	   
-	   //muon dxy(use an unique path)
-	   else if (pathName == muonDxyPlots_pathName)
-	     {
-	       edm::Handle<vector<reco::RecoChargedCandidate>> recoChargedCands;
-	       iEvent.getByToken(chargedCandToken_, recoChargedCands);	       
-	       edm::Handle<reco::BeamSpot> recoBeamSpot;
-	       iEvent.getByToken(beamSpotToken_, recoBeamSpot);
-	       double muon_dxy;
-	       
-	       if (recoChargedCands.isValid() && recoBeamSpot.isValid())
-		 {
-		   for (const auto & key : keys)
-		     {
-		       muon_dxy = dxyFinder(objects[key].eta(), objects[key].phi(), recoChargedCands, recoBeamSpot);
-		       if (muon_dxy != -99.) muonDxy_->Fill(muon_dxy);
-		     }
-		 }
-	     }
-	   
-	   // ////////////////////////////////
-	   // ///
-	   // /// double-object plots
-	   // ///
-	   // ////////////////////////////////
-	   
-	   //double muon low mass 
-	   else if (pathName == diMuonLowMass_pathName)
-	     {
-	       const double mu_mass(.105658);
-	       unsigned int kCnt0 = 0;  
-	       for (const auto & key0: keys)
-		 {
-		   unsigned int kCnt1 = 0;
-		   for (const auto & key1: keys)
-		     {
-		       if (key0 != key1 && kCnt1 > kCnt0) // avoid filling hists with same objs && avoid double counting separate objs
-			 {
-			   if (abs(objects[key0].id()) == 13 && (objects[key0].id()+objects[key1].id()==0))  // check muon id and dimuon charge
-			     {
-			       TLorentzVector mu1, mu2, dimu;
-			       mu1.SetPtEtaPhiM(objects[key0].pt(), objects[key0].eta(), objects[key0].phi(), mu_mass);
-			       mu2.SetPtEtaPhiM(objects[key1].pt(), objects[key1].eta(), objects[key1].phi(), mu_mass);
-			       dimu = mu1+mu2;
-			       diMuonLowMass_->Fill(dimu.M());
-			     }
-			 }
-		       kCnt1 +=1;
-		     }
-		   kCnt0 +=1;
-		 }
-	     } //end double object plot
-	   
-	   else if (pathName == diMuonMass_pathName || pathName == diMuonMass_pathNameOR)
-	     {
-	       const double mu_mass(.105658);
-	       unsigned int kCnt0 = 0;  
-	       for (const auto & key0: keys)
-		 {
-		   unsigned int kCnt1 = 0;
-		   for (const auto & key1: keys)
-		     {
-		       if (key0 != key1 && kCnt1 > kCnt0) // avoid filling hists with same objs && avoid double counting separate objs
-			 {
-			   if (abs(objects[key0].id()) == 13 && (objects[key0].id()+objects[key1].id()==0))  // check muon id and dimuon charge
-			     {
-			       TLorentzVector mu1, mu2, dimu;
-			       mu1.SetPtEtaPhiM(objects[key0].pt(), objects[key0].eta(), objects[key0].phi(), mu_mass);
-			       mu2.SetPtEtaPhiM(objects[key1].pt(), objects[key1].eta(), objects[key1].phi(), mu_mass);
-			       dimu = mu1+mu2;
-			       diMuonMass_->Fill(dimu.M());
-			     }
-			 }
-		       kCnt1 +=1;
-		     }
-		   kCnt0 +=1;
-		 }
-	     } 
-	   
-	   else if (pathName == diElecMass_pathName)
-	     {
-	       unsigned int kCnt0 = 0;  
-	       for (const auto & key0: keys)
-		 {
-		   unsigned int kCnt1 = 0;
-		   for (const auto & key1: keys)
-		     {
-		       if (key0 != key1 && kCnt1 > kCnt0) // avoid filling hists with same objs && avoid double counting separate objs
-			 {
-			   //                   if (abs(objects[key0].id()) == 11 && (objects[key0].id()+objects[key1].id()==0))  // id is not filled for electrons
-			   //                     {
-			   TLorentzVector el1, el2, diEl;
-			   el1.SetPtEtaPhiM(objects[key0].pt(), objects[key0].eta(), objects[key0].phi(), 0);
-			   el2.SetPtEtaPhiM(objects[key1].pt(), objects[key1].eta(), objects[key1].phi(), 0);
-			   diEl = el1+el2;
-			   diElecMass_->Fill(diEl.M());
-			   //                     }  
-			 }
-		       kCnt1 +=1;
-		     }
-		   kCnt0 +=1;
-		 }
-	     } //end double object plot
+           fillPlots(eventNumber, pathName, aodTriggerEvent, recoChargedCands, recoBeamSpot);
 	 }
      }
-   
+
    //   sleep(1); //sleep for 1s, used to calibrate timing 
    double end = get_wall_time();
    double wallTime = end - start;
@@ -628,24 +398,28 @@ HLTObjectMonitor::dqmBeginRun(edm::Run const& iRun, edm::EventSetup const& iSetu
 {
   if (debugPrint) std::cout << "Calling beginRun. " << std::endl;
   bool changed = true;
-  if (hltConfig_.init(iRun, iSetup, processName_, changed))
+  if (hltConfig_.init(iRun, iSetup, "TEST", changed))
     {
       if (debugPrint) std::cout << "Extracting HLTconfig. " << std::endl;
     }
   
   string pathName_noVersion;
-  vector<string> triggerPaths = hltConfig_.triggerNames();
-  for (const auto & pathName : triggerPaths)
-    {
-      pathName_noVersion = hltConfig_.removeVersion(pathName);
-      if (lookupIndex.find(pathName_noVersion) == lookupIndex.end())
-	{
-	  lookupIndex[pathName_noVersion] = hltConfig_.triggerIndex(pathName);
-	}
-    }
+  vector<string> datasetPaths;
   
+  //ATTN!!! this will need to be changed to proper DQM stream before deploying
+  vector<string> datasetNames = hltConfig_.streamContent("A");
+  for (unsigned int i=0;i<datasetNames.size();i++) {
+    datasetPaths = hltConfig_.datasetContent(datasetNames[i]);
+    for (const auto & pathName : datasetPaths){
+      pathName_noVersion = hltConfig_.removeVersion(pathName);
+      //only add unique pathNames (keys) to the lookup table by only adding it if it's no t already in the table
+      if (lookupIndex.find(pathName_noVersion) == lookupIndex.end()){
+	lookupIndex[pathName_noVersion] = hltConfig_.triggerIndex(pathName);
+      }
+    }
+  }
+
   // setup string names
-  razor_pathName = rsq_TH1.getParameter<string>("pathName");
   alphaT_pathName = alphaT_TH1.getParameter<string>("pathName");
   photonPlots_pathName = photonPt_TH1.getParameter<string>("pathName");
   muonPlots_pathName = muonPt_TH1.getParameter<string>("pathName");
@@ -662,19 +436,13 @@ HLTObjectMonitor::dqmBeginRun(edm::Run const& iRun, edm::EventSetup const& iSetu
   pfHtPt_pathName = pfHtPt_TH1.getParameter<string>("pathName");
   bJetPlots_pathName = bJetPhi_TH1.getParameter<string>("pathName");
   bJetPlots_pathNameOR = bJetPhi_TH1.getParameter<string>("pathName_OR");
-  bJetPlots_pathNameCalo = bJetCSVCalo_TH1.getParameter<string>("pathName");
-  bJetPlots_pathNamePF = bJetCSVPF_TH1.getParameter<string>("pathName");
   diMuonMass_pathName = diMuonMass_TH1.getParameter<string>("pathName");
   diMuonMass_pathNameOR = diMuonMass_TH1.getParameter<string>("pathName_OR");
   diElecMass_pathName = diElecMass_TH1.getParameter<string>("pathName");
   muonDxyPlots_pathName = muonDxy_TH1.getParameter<string>("pathName");
 
   //link all paths and filters needed
-  if (lookupIndex.count(razor_pathName) > 0)
-    {
-      quickCollectionPaths.push_back(razor_pathName);
-      lookupFilter[razor_pathName] = rsq_TH1.getParameter<string>("moduleName");
-    }
+  
   if (lookupIndex.count(photonPlots_pathName) > 0)
     {
       quickCollectionPaths.push_back(photonPlots_pathName);
@@ -754,16 +522,6 @@ HLTObjectMonitor::dqmBeginRun(edm::Run const& iRun, edm::EventSetup const& iSetu
     {
       quickCollectionPaths.push_back(bJetPlots_pathNameOR);
       lookupFilter[bJetPlots_pathNameOR] = bJetEta_TH1.getParameter<string>("moduleName_OR");
-    }
-  if (lookupIndex.count(bJetPlots_pathNameCalo) >0)
-    {
-      quickCollectionPaths.push_back(bJetPlots_pathNameCalo);
-      lookupFilter[bJetPlots_pathNameCalo] = bJetCSVCalo_TH1.getParameter<string>("moduleName");
-    }
-  if (lookupIndex.count(bJetPlots_pathNamePF) >0)
-    {
-      quickCollectionPaths.push_back(bJetPlots_pathNamePF);
-      lookupFilter[bJetPlots_pathNamePF] = bJetCSVPF_TH1.getParameter<string>("moduleName");
     }
   if (lookupIndex.count(diMuonMass_pathName) >0)
     {
@@ -922,16 +680,6 @@ void HLTObjectMonitor::bookHistograms(DQMStore::IBooker & ibooker, edm::Run cons
       hist_diMuonMass->SetMinimum(0);
       diMuonMass_ = ibooker.book1D("diMuon_Mass",hist_diMuonMass);
     }
-  //razor
-  if (lookupIndex.count(razor_pathName) > 0)
-    {
-      TH1F * hist_rsq = new TH1F("rsq","rsq", rsq_TH1.getParameter<int>("NbinsX"), rsq_TH1.getParameter<int>("Xmin"), rsq_TH1.getParameter<int>("Xmax"));
-      hist_rsq->SetMinimum(0);
-      rsq_ = ibooker.book1D("rsq",hist_rsq);
-      TH1F * hist_mr = new TH1F("mr","mr", mr_TH1.getParameter<int>("NbinsX"), mr_TH1.getParameter<int>("Xmin"), mr_TH1.getParameter<int>("Xmax"));
-      hist_mr->SetMinimum(0);
-      mr_ = ibooker.book1D("mr",hist_mr);
-    }
   //dielectron mass
   if (lookupIndex.count(diElecMass_pathName) >0)
     {
@@ -946,24 +694,10 @@ void HLTObjectMonitor::bookHistograms(DQMStore::IBooker & ibooker, edm::Run cons
       hist_muonDxy->SetMinimum(0);
       muonDxy_ = ibooker.book1D("Muon_dxy",hist_muonDxy);
     }
-  //CSV
-  if (lookupIndex.count(bJetPlots_pathNameCalo) >0)
-    {
-      TH1F * hist_bJetCSVCalo = new TH1F("bJetCSVCalo","calo b-jet CSV ",bJetCSVCalo_TH1.getParameter<int>("NbinsX"),bJetCSVCalo_TH1.getParameter<int>("Xmin"),bJetCSVCalo_TH1.getParameter<int>("Xmax"));
-      hist_bJetCSVCalo->SetMinimum(0);
-      bJetCSVCalo_ = ibooker.book1D("bJetCSVCalo",hist_bJetCSVCalo);
-    } 
-  if (lookupIndex.count(bJetPlots_pathNamePF) >0)
-    {
-      TH1F * hist_bJetCSVPF = new TH1F("bJetCSVPF","pf b-jet CSV",bJetCSVPF_TH1.getParameter<int>("NbinsX"),bJetCSVPF_TH1.getParameter<int>("Xmin"),bJetCSVPF_TH1.getParameter<int>("Xmax"));
-      hist_bJetCSVPF->SetMinimum(0);
-      bJetCSVPF_ = ibooker.book1D("bJetCSVPF",hist_bJetCSVPF);
-    }
-
 
   ////////////////////////////////
   ///
-  // Backup workspace plots
+  /// Backup workspace plots
   ///
   ////////////////////////////////
   ibooker.setCurrentFolder(backupFolder);
@@ -990,6 +724,28 @@ void HLTObjectMonitor::bookHistograms(DQMStore::IBooker & ibooker, edm::Run cons
       hist_muonPhi->SetMinimum(0);
       muonPhi_ = ibooker.book1D("Muon_phi",hist_muonPhi);
     }
+  if (lookupIndex.count(l2muonPlots_pathName) > 0)
+    {
+      //l2muon eta
+      TH1F * hist_l2muonEta = new TH1F("L2Muon_eta","L2Muon eta",l2muonEta_TH1.getParameter<int>("NbinsX"),l2muonEta_TH1.getParameter<int>("Xmin"),l2muonEta_TH1.getParameter<int>("Xmax"));
+      hist_l2muonEta->SetMinimum(0);
+      l2muonEta_ = ibooker.book1D("L2Muon_eta",hist_l2muonEta);
+      //l2muon phi
+      TH1F * hist_l2muonPhi = new TH1F("L2Muon_phi","L2Muon phi",l2muonPhi_TH1.getParameter<int>("NbinsX"),l2muonPhi_TH1.getParameter<double>("Xmin"),l2muonPhi_TH1.getParameter<double>("Xmax"));
+      hist_l2muonPhi->SetMinimum(0);
+      l2muonPhi_ = ibooker.book1D("L2Muon_phi",hist_l2muonPhi);
+    }
+  if (lookupIndex.count(l2muonPlots_pathName) > 0)
+    {
+      //l2NoBPTXmuon eta
+      TH1F * hist_l2NoBPTXmuonEta = new TH1F("L2NoBPTXMuon_eta","L2NoBPTXMuon eta",l2NoBPTXmuonEta_TH1.getParameter<int>("NbinsX"),l2NoBPTXmuonEta_TH1.getParameter<int>("Xmin"),l2NoBPTXmuonEta_TH1.getParameter<int>("Xmax"));
+      hist_l2NoBPTXmuonEta->SetMinimum(0);
+      l2NoBPTXmuonEta_ = ibooker.book1D("L2NoBPTXMuon_eta",hist_l2NoBPTXmuonEta);
+      //l2NoBPTXmuon phi
+      TH1F * hist_l2NoBPTXmuonPhi = new TH1F("L2NoBPTXMuon_phi","L2NoBPTXMuon phi",l2NoBPTXmuonPhi_TH1.getParameter<int>("NbinsX"),l2NoBPTXmuonPhi_TH1.getParameter<double>("Xmin"),l2NoBPTXmuonPhi_TH1.getParameter<double>("Xmax"));
+      hist_l2NoBPTXmuonPhi->SetMinimum(0);
+      l2NoBPTXmuonPhi_ = ibooker.book1D("L2NoBPTXMuon_phi",hist_l2NoBPTXmuonPhi);
+    }
   if (lookupIndex.count(electronPlots_pathName) > 0)
     {
       //electron eta
@@ -1015,8 +771,7 @@ void HLTObjectMonitor::bookHistograms(DQMStore::IBooker & ibooker, edm::Run cons
       hist_PFMetPhi->SetMinimum(0);
       pfMetPhi_ = ibooker.book1D("PFMET_phi",hist_PFMetPhi);
     }
-  if (lookupIndex.count(bJetPlots_pathNameCalo) >0 || lookupIndex.count(bJetPlots_pathNamePF) >0) 
-    //  if (lookupIndex.count(bJetPlots_pathName) >0 || lookupIndex.count(bJetPlots_pathNameOR) >0) 
+  if (lookupIndex.count(bJetPlots_pathName) >0 || lookupIndex.count(bJetPlots_pathNameOR) >0) 
     {
       //bJet phi
       TH1F * hist_bJetPhi = new TH1F("bJet_phi","b-Jet phi",bJetPhi_TH1.getParameter<int>("NbinsX"),bJetPhi_TH1.getParameter<double>("Xmin"),bJetPhi_TH1.getParameter<double>("Xmax"));
@@ -1031,7 +786,7 @@ void HLTObjectMonitor::bookHistograms(DQMStore::IBooker & ibooker, edm::Run cons
 
 double HLTObjectMonitor::dxyFinder(double eta, double phi, edm::Handle<reco::RecoChargedCandidateCollection> recoChargedCands, edm::Handle<reco::BeamSpot> recoBeamSpot)
 {
-  double dxy = -99.;
+  double dxy = 0;
   for (reco::RecoChargedCandidateCollection::const_iterator l3Muon = recoChargedCands->begin(); l3Muon != recoChargedCands->end(); l3Muon++)
     {
       if (deltaR(eta,phi,l3Muon->eta(),l3Muon->phi()) < 0.1)
@@ -1041,6 +796,250 @@ double HLTObjectMonitor::dxyFinder(double eta, double phi, edm::Handle<reco::Rec
         }
     }
   return dxy;
+}
+
+void HLTObjectMonitor::fillPlots(int evtNum, string pathName, edm::Handle<trigger::TriggerEvent> aodTriggerEvent, edm::Handle<reco::RecoChargedCandidateCollection> recoChargedCands, edm::Handle<reco::BeamSpot> recoBeamSpot)
+{
+  if (debugPrint) std::cout << "Inside fillPlots( " << evtNum << " , " << pathName << " ) " << std::endl;
+
+  const TriggerObjectCollection objects = aodTriggerEvent->getObjects();
+  
+  edm::InputTag moduleFilter(lookupFilter[pathName],"","TEST");
+  unsigned int moduleFilterIndex = aodTriggerEvent->filterIndex(moduleFilter);
+  const Keys &keys = aodTriggerEvent->filterKeys( moduleFilterIndex );
+
+  ////////////////////////////////
+  ///
+  /// single-object plots
+  ///
+  ////////////////////////////////  
+ 
+  //PFHT pt
+  if (pathName == pfHtPt_pathName)
+    {
+      for (const auto & key : keys) pfHtPt_->Fill(objects[key].pt());
+    }
+  
+  //jet pt
+  else if (pathName == jetPt_pathName)
+    {
+      for (const auto & key : keys) jetPt_->Fill(objects[key].pt());
+    }
+
+  //photon pt + eta + phi (all use same path)
+  else if (pathName == photonPlots_pathName)
+    {
+      for (const auto & key : keys) 
+	{
+	  photonPt_->Fill(objects[key].pt());
+	  photonEta_->Fill(objects[key].eta());
+	  photonPhi_->Fill(objects[key].phi());
+	}
+    }
+
+  //electron pt + eta + phi (all use same path)
+  else if (pathName == electronPlots_pathName)
+    {
+      for (const auto & key : keys) 
+  	{
+  	  electronPt_->Fill(objects[key].pt());
+  	  electronEta_->Fill(objects[key].eta());
+  	  electronPhi_->Fill(objects[key].phi());
+  	}
+    }
+
+  //muon pt + eta + phi (all use same path)
+  else if (pathName == muonPlots_pathName)
+    {
+      for (const auto & key : keys) 
+  	{
+  	  muonPt_->Fill(objects[key].pt());
+  	  muonEta_->Fill(objects[key].eta());
+  	  muonPhi_->Fill(objects[key].phi());
+      	}
+    }
+
+  //l2muon pt
+  else if (pathName == l2muonPlots_pathName)
+    {
+      for (const auto & key : keys) 
+  	{
+  	  l2muonPt_->Fill(objects[key].pt());
+  	  l2muonEta_->Fill(objects[key].eta());
+  	  l2muonPhi_->Fill(objects[key].phi());
+      	}
+    }
+
+  //l2NoBPTXmuon pt
+  else if (pathName == l2NoBPTXmuonPlots_pathName)
+    {
+      for (const auto & key : keys) 
+  	{
+  	  l2NoBPTXmuonPt_->Fill(objects[key].pt());
+  	  l2NoBPTXmuonEta_->Fill(objects[key].eta());
+  	  l2NoBPTXmuonPhi_->Fill(objects[key].phi());
+      	}
+    }
+
+  //alphaT
+  else if (pathName == alphaT_pathName)
+    {
+      std::vector<ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double>>> alphaT_jets;
+      for (const auto & key : keys)
+  	{
+  	  ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double>> JetLVec(objects[key].pt(),objects[key].eta(),objects[key].phi(),objects[key].mass());
+  	  alphaT_jets.push_back(JetLVec);
+  	}
+
+      float alphaT = AlphaT(alphaT_jets,false).value(); 
+      alphaT_->Fill(alphaT);
+    }
+
+  //tau pt
+  else if (pathName == tauPt_pathName)
+    {
+      for (const auto & key : keys) tauPt_->Fill(objects[key].pt());
+    }
+
+  //caloMET pt+phi (same path)
+  else if (pathName == caloMetPlots_pathName)
+    {
+      for (const auto & key : keys)
+  	{
+  	  caloMetPt_->Fill(objects[key].pt());
+  	  caloMetPhi_->Fill(objects[key].phi());
+  	}
+    }
+
+  //caloHT pt
+  else if (pathName == caloHtPt_pathName)
+    {
+      for (const auto & key : keys) caloHtPt_->Fill(objects[key].pt());
+    }
+
+  //jetAK8 pt + mass
+  else if (pathName == jetAK8Plots_pathName)
+    {
+      for (const auto & key : keys)
+	{
+	  jetAK8Pt_->Fill(objects[key].pt());
+	  jetAK8Mass_->Fill(objects[key].mass());
+	}
+    }
+  
+  //PFMET pt + phi
+  else if (pathName == pfMetPlots_pathName)
+    {
+      for (const auto & key : keys)
+  	{
+  	  pfMetPt_->Fill(objects[key].pt());
+  	  pfMetPhi_->Fill(objects[key].phi());
+  	}
+    }
+
+  // bjet eta + phi
+  else if (pathName == bJetPlots_pathName || pathName == bJetPlots_pathNameOR)
+    {
+       for (const auto & key : keys)
+  	{
+   	  bJetEta_->Fill(objects[key].eta());
+   	  bJetPhi_->Fill(objects[key].phi());
+  	}
+    }
+  
+  //muon dxy(use an unique path)
+  else if (pathName == muonDxyPlots_pathName)
+    {
+      for (const auto & key : keys)
+        {
+           muonDxy_->Fill(dxyFinder(objects[key].eta(), objects[key].phi(), recoChargedCands, recoBeamSpot));
+        }
+    }
+  
+  // ////////////////////////////////
+  // ///
+  // /// double-object plots
+  // ///
+  // ////////////////////////////////
+  
+  //double muon low mass 
+  else if (pathName == diMuonLowMass_pathName)
+    {
+      const double mu_mass(.105658);
+      unsigned int kCnt0 = 0;  
+      for (const auto & key0: keys)
+  	{
+  	  unsigned int kCnt1 = 0;
+  	  for (const auto & key1: keys)
+  	    {
+  	      if (key0 != key1 && kCnt1 > kCnt0) // avoid filling hists with same objs && avoid double counting separate objs
+  		{
+  		  if (abs(objects[key0].id()) == 13 && (objects[key0].id()+objects[key1].id()==0))  // check muon id and dimuon charge
+  		    {
+  		      TLorentzVector mu1, mu2, dimu;
+  		      mu1.SetPtEtaPhiM(objects[key0].pt(), objects[key0].eta(), objects[key0].phi(), mu_mass);
+  		      mu2.SetPtEtaPhiM(objects[key1].pt(), objects[key1].eta(), objects[key1].phi(), mu_mass);
+  		      dimu = mu1+mu2;
+  		      diMuonLowMass_->Fill(dimu.M());
+  		    }
+  		}
+  	      kCnt1 +=1;
+  	    }
+  	  kCnt0 +=1;
+  	}
+    } //end double object plot
+
+  else if (pathName == diMuonMass_pathName || pathName == diMuonMass_pathNameOR)
+    {
+      const double mu_mass(.105658);
+      unsigned int kCnt0 = 0;  
+      for (const auto & key0: keys)
+	{
+	  unsigned int kCnt1 = 0;
+	  for (const auto & key1: keys)
+	    {
+	      if (key0 != key1 && kCnt1 > kCnt0) // avoid filling hists with same objs && avoid double counting separate objs
+		{
+		  if (abs(objects[key0].id()) == 13 && (objects[key0].id()+objects[key1].id()==0))  // check muon id and dimuon charge
+		    {
+		      TLorentzVector mu1, mu2, dimu;
+		      mu1.SetPtEtaPhiM(objects[key0].pt(), objects[key0].eta(), objects[key0].phi(), mu_mass);
+		      mu2.SetPtEtaPhiM(objects[key1].pt(), objects[key1].eta(), objects[key1].phi(), mu_mass);
+		      dimu = mu1+mu2;
+		      diMuonMass_->Fill(dimu.M());
+		    }
+		}
+	      kCnt1 +=1;
+	    }
+	  kCnt0 +=1;
+	}
+    } 
+  
+  else if (pathName == diElecMass_pathName)
+    {
+      unsigned int kCnt0 = 0;  
+      for (const auto & key0: keys)
+	{
+	  unsigned int kCnt1 = 0;
+	  for (const auto & key1: keys)
+	    {
+	      if (key0 != key1 && kCnt1 > kCnt0) // avoid filling hists with same objs && avoid double counting separate objs
+		{
+		  //                   if (abs(objects[key0].id()) == 11 && (objects[key0].id()+objects[key1].id()==0))  // id is not filled for electrons
+		  //                     {
+		  TLorentzVector el1, el2, diEl;
+		  el1.SetPtEtaPhiM(objects[key0].pt(), objects[key0].eta(), objects[key0].phi(), 0);
+		  el2.SetPtEtaPhiM(objects[key1].pt(), objects[key1].eta(), objects[key1].phi(), 0);
+		  diEl = el1+el2;
+		  diElecMass_->Fill(diEl.M());
+		  //                     }  
+		}
+	      kCnt1 +=1;
+	    }
+	  kCnt0 +=1;
+	}
+    } //end double object plot
+  
 }
 
 double HLTObjectMonitor::get_wall_time()
