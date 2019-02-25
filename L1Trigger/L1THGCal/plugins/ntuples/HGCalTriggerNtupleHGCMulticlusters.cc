@@ -132,7 +132,8 @@ fill(const edm::Event& e, const edm::EventSetup& es)
     cl3d_srrmean_.emplace_back(cl3d_itr->sigmaRRMean());
     cl3d_emaxe_.emplace_back(cl3d_itr->eMax()/cl3d_itr->energy());
     cl3d_bdteg_.emplace_back(id_->value(*cl3d_itr));
-    cl3d_quality_.emplace_back(cl3d_itr->hwQual());
+    //cl3d_quality_.emplace_back(cl3d_itr->hwQual());
+    cl3d_quality_.emplace_back(id_->decision(*cl3d_itr)); // see L.207 of HGCalMulticlusteringImpl.cc
 
     // Retrieve indices of trigger cells inside cluster
     cl3d_clusters_id_.emplace_back(cl3d_itr->constituents().size());
